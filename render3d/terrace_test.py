@@ -174,13 +174,13 @@ add(bpy.ops.mesh.primitive_cylinder_add, "barrel", (1.3, 1.5, 0.45), (0.38, 0.38
 for k, dx in enumerate((-0.12, 0.0, 0.12)):
     add(bpy.ops.mesh.primitive_cylinder_add, f"sp{k}", (1.3 + dx, 1.5, 1.4), (0.025, 0.025, 1.0), material=wood)
     add(bpy.ops.mesh.primitive_cone_add, f"tip{k}", (1.3 + dx, 1.5, 2.55), (0.07, 0.07, 0.18), material=iron)
-add(bpy.ops.mesh.primitive_cylinder_add, "table_red", (0, -2.2, 0.3), (1.1, 1.1, 0.05), material=mat("tred", "#c9403a"), vertices=64)
-add(bpy.ops.mesh.primitive_cylinder_add, "table_rim", (0, -2.2, 0.28), (1.2, 1.2, 0.05), material=mat("trim", "#e2b54a"), vertices=64)
+add(bpy.ops.mesh.primitive_cylinder_add, "table_red", (0, -2.9, 0.12), (0.9, 0.9, 0.05), material=mat("tred", "#c9403a"), vertices=64)
+add(bpy.ops.mesh.primitive_cylinder_add, "table_rim", (0, -2.9, 0.1), (0.98, 0.98, 0.05), material=mat("trim", "#e2b54a"), vertices=64)
 
 # characters as cut-out cards
-card("king_red", f"{CUT}/king_red.png", (-1.05, 0.9, 0), 2.6)
-card("smith", f"{CUT}/smith.png", (0.15, 1.3, 0), 2.4)
-card("king_teal", f"{CUT}/king_teal.png", (1.25, 0.9, 0), 2.6)
+card("king_red", f"{CUT}/king_red.png", (-1.15, 0.7, 0), 2.55)
+card("smith", f"{CUT}/smith.png", (0.1, 1.2, 0), 2.4)
+card("king_teal", f"{CUT}/king_teal.png", (1.3, 0.7, 0), 2.55)
 to_props("stump", "anvil", "barrel", "sp", "tip", "table", "pole", "flag", "parapet", "coping")
 
 # light: low warm sun from behind-left for long shadows, soft fill from the sky
