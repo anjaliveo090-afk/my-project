@@ -12,6 +12,7 @@ import numpy as np
 W, H, FPS = 720, 1280, 30
 INK = (0.10, 0.09, 0.12)
 PI = math.pi
+LIPSYNC = True  # False: mouths keep the scene expression instead of following the voice
 ENERGY = 2.0  # character motion multiplier (idle sway, head and hand movement)
 
 

@@ -242,6 +242,9 @@ if __name__ == "__main__":
     import json
     json.dump([{"time": round(t, 3), "file": f, "volume": v} for t, f, v in sorted(SFX)],
               open(sys.argv[2], "w"), indent=1)
-    if len(sys.argv) > 3:
+    if "--no-lipsync" in sys.argv:
+        import engine
+        engine.LIPSYNC = False
+    elif len(sys.argv) > 3:
         set_voice(sys.argv[3])
     render(SHOTS, TOTAL, sys.argv[1], grain=5)

@@ -411,13 +411,13 @@ def _face(ctx, cx, cy, r, lw, expr, t, talk, look, ch):
     my = cy + 0.56 * r + (0.05 * r if ch is not None and ch.mustache else 0)
     mx = cx + lx * 1.1
     mouth = expr
-    speaking = talk or (_NOW["speaker"] is ch)
+    speaking = engine.LIPSYNC and (talk or _NOW["speaker"] is ch)
     level = 0.0
     if speaking and _VOICE["env"] is not None:
         level = voice_level()
         if level > 0 and expr not in ("laugh", "shock"):
             mouth = "open"
-    elif talk and int(t * 9) % 2 == 0 and expr not in ("laugh", "shock", "grin"):
+    elif engine.LIPSYNC and talk and int(t * 9) % 2 == 0 and expr not in ("laugh", "shock", "grin"):
         mouth, level = "open", 0.55
 
     red = hexc("#7a2430")
