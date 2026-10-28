@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Clock Tower That Lied</title>
+<style>
+  @font-face { font-family: "Instrument Serif"; src: url(fonts/instrument-serif-latin-400-normal.woff2) format("woff2"); font-style: normal; }
+  @font-face { font-family: "Instrument Serif"; src: url(fonts/instrument-serif-latin-400-italic.woff2) format("woff2"); font-style: italic; }
+  @font-face { font-family: "InterV"; src: url(fonts/inter-latin-400-normal.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "InterV"; src: url(fonts/inter-latin-700-normal.woff2) format("woff2"); font-weight: 700; }
+  @font-face { font-family: "InterV"; src: url(fonts/inter-latin-900-normal.woff2) format("woff2"); font-weight: 900; }
+  @font-face { font-family: "JBMono"; src: url(fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "JBMono"; src: url(fonts/jetbrains-mono-latin-700-normal.woff2) format("woff2"); font-weight: 700; }
+  html, body { margin: 0; height: 100%; background: #050608; color: #efe6d2; font: 14px/1.4 system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+  canvas { height: min(86vh, calc(100vw * 16 / 9)); aspect-ratio: 9 / 16; background: #000; box-shadow: 0 10px 60px #000; }
+  .bar { display: flex; gap: 12px; align-items: center; width: min(86vh * 9 / 16, 100vw - 32px); }
+  .bar input { flex: 1; }
+  button { background: #1a1e29; color: inherit; border: 1px solid #333a4a; border-radius: 6px; padding: 6px 14px; cursor: pointer; }
+  body.render .bar { display: none; }
+  body.render canvas { height: auto; box-shadow: none; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div class="bar">
+  <button id="play">Play</button>
+  <input id="seek" type="range" min="0" max="60.66" step="0.01" value="0">
+  <span id="time">0.00</span>
+</div>
+<audio id="audio" src="assets/narration.mp3" preload="auto"></audio>
+<script src="assets/words.js"></script>
+<script src="scene.js"></script>
+<script>
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const { W, H, DUR, render, post } = window.CLIP;
+  const FPS = 30;
+  const params = new URLSearchParams(location.search);
+
+  const ready = Promise.all([
+    document.fonts.load('400 40px "Instrument Serif"'), document.fonts.load('italic 400 40px "Instrument Serif"'),
+    document.fonts.load('400 40px InterV'), document.fonts.load('700 40px InterV'), document.fonts.load('900 40px InterV'),
+    document.fonts.load('400 40px JBMono'), document.fonts.load('700 40px JBMono'),
+  ]);
+
+  // Offline renderer hook: averages `sub` sub-frames across a 180° shutter for motion blur,
+  // then adds grain/vignette once. Returns a JPEG data URL.
+  const acc = document.createElement('canvas'); acc.width = W; acc.height = H;
+  const actx = acc.getContext('2d');
+  const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H;
+  const tctx = tmp.getContext('2d');
+  window.renderFrame = async (frame, sub = 3, quality = 0.95) => {
+    await ready;
+    const t = frame / FPS, shutter = 0.5 / FPS;
+    for (let i = 0; i < sub; i++) {
+      const ts = sub === 1 ? t : t + (i / (sub - 1) - 0.5) * shutter;
+      tctx.setTransform(1, 0, 0, 1, 0, 0);
+      render(tctx, Math.max(0, Math.min(DUR, ts)));
+      actx.globalAlpha = 1 / (i + 1);
+      actx.drawImage(tmp, 0, 0);
+    }
+    actx.globalAlpha = 1;
+    ctx.drawImage(acc, 0, 0);
+    post(ctx, t, frame);
+    return cv.toDataURL('image/jpeg', quality);
+  };
+
+  if (params.has('render')) {
+    document.body.classList.add('render');
+  } else {
+    const audio = document.getElementById('audio'), seek = document.getElementById('seek'), time = document.getElementById('time'), play = document.getElementById('play');
+    let scrub = parseFloat(params.get('t') || '0');
+    audio.currentTime = scrub;
+    play.onclick = () => { audio.paused ? audio.play() : audio.pause(); };
+    audio.onplay = () => play.textContent = 'Pause';
+    audio.onpause = () => play.textContent = 'Play';
+    seek.oninput = () => { audio.currentTime = scrub = parseFloat(seek.value); };
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space') { e.preventDefault(); play.onclick(); }
+      if (e.code === 'ArrowRight') audio.currentTime = Math.min(DUR, audio.currentTime + 1 / FPS);
+      if (e.code === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 1 / FPS);
+    });
+    ready.then(() => {
+      const loop = () => {
+        const t = audio.currentTime;
+        render(ctx, t); post(ctx, t, Math.floor(t * FPS));
+        if (document.activeElement !== seek) seek.value = t;
+        time.textContent = t.toFixed(2);
+        requestAnimationFrame(loop);
+      };
+      loop();
+    });
+  }
+</script>
+</body>
+</html>
