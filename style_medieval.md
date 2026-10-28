@@ -5,15 +5,17 @@ aerial river with two armies and a bridge, "YEARS AT WAR 100" sign, sweating bla
 Code: `animator/style3.py` (characters), `animator/medieval.py` (sets and props).
 Use this style when the user asks for the "kings / medieval / war" look.
 
-## Characters (`style3.Char3`)
-- **Head:** big cream-white egg (`#fcf6ef`), dark brown outline (`#2e2226`), soft grey shade at the lower edge. No skin colour, no hair on most characters.
-- **Proportions (measured):** head : body : legs = 1 : 1.35 : 1.1 for tunics. Robes reach the ankles (body about 2 head-heights). Body width about 0.8 of the head width.
-- **Body:** bean shape (narrow rounded shoulders, widest in the middle). Robes flare at the hem; capes hang behind in a darker shade.
-- **Limbs:** thin dark sticks, small dark ball hands, small dark oval feet.
-- **Face:** small black oval eyes, **thick expressive brows** (they carry the emotion), short line mouth. Clean shapes for facial hair: handlebar moustache (blacksmith), pointed goatee (kings), long white beard (old man).
-- **Identity by colour:** two sides, **red** (`#e84a36`, cape `#ac575d`, gold crown) vs **teal** (`#3aa6a0`, silver crown). Soldiers wear grey helmets and teal-gold or red shields.
-- **Props in hands:** spear with red tassel, round shield (gold rim, teal ring, silver boss), walking stick, hammer, money bags.
-- **Reactions:** sweat drop and shake lines when nervous, smug half-lidded eyes for the confident king, closed arc eyes when happy.
+## Characters (`style3.Char3`), pixel-measured on the reference
+- **2D drawings with soft painted light, not 3D models:** gradient lit from the upper-left and shaded toward the lower-right, no gloss. A thin light "sticker" rim runs around every character outside the dark outline.
+- **Head:** wide, slightly flat cream-white oval (`#fcf6ef`), width about 1.25x its height, soft shade at the lower-right.
+- **Height varies by character:** kings are tall, with total height (crown to feet) = 3.65x the head width, long legs (`legs=2.75, torso=2.05`). The blacksmith and the old man are shorter (`legs=2.0, torso=2.0` or defaults).
+- **Body:** bean shape, about 0.7x the head width, small belly. Robes and capes: the cape flows to one side behind, and the legs stay visible.
+- **Limbs:** THICK dark-brown limbs (about 5.5% of the head width), big dark ball hands, rounded dark feet.
+- **Face:** small black oval eyes, thick brows, short mouth. Red king: small brown pointed goatee and a toothy grin. Teal king: wide white beard with strands and smug half-lidded eyes. Blacksmith: big brown handlebar moustache, tired half-lidded eyes, big orange apron, money bags with "$".
+- **Crowns:** gold with sharp spikes, white balls on the tips and red/blue gems. Silver with rounded bumps and teal gems.
+
+## How a frame is made
+3D background plate rendered in Blender (`render3d/terrace_v2.py` with `NOCHARS=1`): sunlit terrace, parapet, banners, painted backdrop pre-blurred for depth of field. The 2D characters (`style3`) and their long diagonal floor shadows (`medieval.cast_shadow`) are composited on top by the animator. This matches the reference: 2D characters in a 3D world.
 
 ## Sets (`medieval.py`)
 - **Painted backdrop, out of focus:** blue sky gradient (`#5f88d0` → `#a9cdf3`), puffy white clouds with lavender undersides, blue mountains with snow caps, castles with red and teal roofs, green hills and trees. Always drawn through `blurred()` with a light haze, so characters pop.

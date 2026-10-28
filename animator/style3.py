@@ -12,7 +12,7 @@ from engine import PI, ellipse, hexc, rrect, src
 
 OUT = hexc("#3a2a2c")
 HEAD = hexc("#fcf6ef")
-HEAD_SHADE = hexc("#ddd6d6")
+HEAD_SHADE = hexc("#d6cfd3")
 
 
 def lighter(c, k=0.18):
@@ -24,9 +24,13 @@ def darker(c, k=0.18):
 
 
 def shade(ctx, top, bottom, y0, y1, lw):
-    g = cairo.LinearGradient(0, y0, 0, y1)
-    g.add_color_stop_rgb(0, *top)
-    g.add_color_stop_rgb(1, *bottom)
+    """Soft painted light like the reference: lit upper-left, shaded lower-right."""
+    span = max(1.0, abs(y1 - y0))
+    g = cairo.LinearGradient(-0.45 * span, y0, 0.45 * span, y1)
+    mid = tuple((a + b) / 2 for a, b in zip(top, bottom))
+    g.add_color_stop_rgb(0, *lighter(top, 0.08))
+    g.add_color_stop_rgb(0.45, *mid)
+    g.add_color_stop_rgb(1, *darker(bottom, 0.12))
     ctx.set_source(g)
     ctx.fill_preserve()
     if lw:
@@ -44,7 +48,7 @@ class Char3:
     hang separately to the floor."""
 
     def __init__(self, body, outfit="robe", cape=None, crown=None, beard=None, mustache=None,
-                 helmet=False, hat=None, apron=None, belt=None, under=None):
+                 helmet=False, hat=None, apron=None, belt=None, under=None, legs=1.7, torso=1.75):
         self.body = hexc(body)
         self.outfit = outfit          # robe | tunic
         self.cape = hexc(cape) if cape else None
@@ -56,6 +60,9 @@ class Char3:
         self.apron = hexc(apron) if apron else None
         self.belt = hexc(belt) if belt else None
         self.under = hexc(under) if under else None
+        # leg and body length in head half-widths; kings are tall (reference: total height
+        # = 3.65 x head width), the old man and the smith are shorter
+        self.legs, self.torso = legs, torso
 
     def draw(self, ctx, x, y, s=1.0, expr="neutral", t=0.0, arms=("down", "down"), pose="stand",
              look=0.0, bob=1.0, walk_phase=0.0, lean=0.0, item=None, item_hand=1, sweat=False,
@@ -63,7 +70,7 @@ class Char3:
         r = 64 * s                     # head half-width
         e = engine.ENERGY * bob
         lw = 0.05 * r
-        limb = 0.065 * r
+        limb = 0.11 * r               # reference: limbs ~5.5% of the head width
         ctx.save()
         ctx.translate(x + (math.sin(t * 60) * 0.03 * r * shake), y)
         ctx.set_line_cap(cairo.LINE_CAP_ROUND)
@@ -78,15 +85,16 @@ class Char3:
             ctx.arc(0, 0, r, 0, 2 * PI)
             ctx.fill()
             ctx.restore()
+        ctx.push_group()
         bounce = -abs(math.sin(t * 2 * PI * 1.8)) * 0.04 * r * e
-        hem = -1.7 * r + bounce        # pixel-measured: head : body : legs = 1 : 1.1 : 1.05
-        shoulder = -3.45 * r + bounce
+        hem = -self.legs * r + bounce
+        shoulder = hem - self.torso * r
         # cape hangs behind and flows out to one side (left), legs stay visible in front
         if self.cape:
             ctx.move_to(-0.45 * r, shoulder + 0.05 * r)
-            ctx.curve_to(-0.95 * r, -2.4 * r, -1.35 * r, -0.9 * r, -1.25 * r, -0.06 * r)
+            ctx.curve_to(-0.95 * r, shoulder * 0.7, -1.35 * r, shoulder * 0.26, -1.25 * r, -0.06 * r)
             ctx.curve_to(-0.9 * r, 0.02 * r, -0.4 * r, -0.02 * r, -0.05 * r, -0.12 * r)
-            ctx.curve_to(0.3 * r, -0.6 * r, 0.6 * r, -1.6 * r, 0.5 * r, shoulder + 0.1 * r)
+            ctx.curve_to(0.3 * r, shoulder * 0.17, 0.6 * r, shoulder * 0.46, 0.5 * r, shoulder + 0.1 * r)
             ctx.close_path()
             shade(ctx, lighter(self.cape, 0.08), darker(self.cape, 0.12), shoulder, 0, lw)
         # long thin legs + small feet
@@ -102,10 +110,9 @@ class Char3:
             ctx.set_source_rgb(*OUT)
             ctx.set_line_width(limb)
             ctx.stroke()
-            ctx.move_to(fx, fy - 0.04 * r)
-            ctx.line_to(fx + side * 0.2 * r, fy - 0.04 * r)
-            ctx.set_line_width(limb * 1.2)
-            ctx.stroke()
+            ellipse(ctx, fx + side * 0.08 * r, fy - 0.06 * r, 0.19 * r, 0.09 * r)
+            src(ctx, OUT)
+            ctx.fill()
         ctx.save()
         ctx.translate(0, hem)
         ctx.rotate(lean + math.sin(t * 2.5) * 0.02 * e)
@@ -173,10 +180,21 @@ class Char3:
             if a == "bags":
                 draw_item3(ctx, "moneybag", hx, hy, r, t)
             ctx.new_sub_path()
-            ctx.arc(hx, hy, 0.07 * r, 0, 2 * PI)
+            ctx.arc(hx, hy, 0.105 * r, 0, 2 * PI)
             src(ctx, OUT)
             ctx.fill()
         ctx.restore()
+        pat = ctx.pop_group()
+        rim = max(1.2, 0.035 * r)  # thin light "sticker" edge around the outline
+        for k in range(12):
+            a = k * PI / 6
+            ctx.save()
+            ctx.translate(math.cos(a) * rim, math.sin(a) * rim)
+            ctx.set_source_rgba(1, 0.99, 0.96, 0.9)
+            ctx.mask(pat)
+            ctx.restore()
+        ctx.set_source(pat)
+        ctx.paint()
         ctx.restore()
 
     def _head(self, ctx, cx, cy, r, lw, expr, t, look, sweat):
@@ -186,7 +204,7 @@ class Char3:
         ctx.curve_to(cx + r, cy + 0.85 * ry, cx + 0.55 * r, cy + 1.0 * ry, cx, cy + 1.0 * ry)
         ctx.curve_to(cx - 0.55 * r, cy + 1.0 * ry, cx - r, cy + 0.85 * ry, cx - r, cy + 0.05 * ry)
         ctx.close_path()
-        g = cairo.RadialGradient(cx + 0.2 * r, cy - 0.35 * r, 0.2 * r, cx, cy + 0.05 * r, 1.08 * r)
+        g = cairo.RadialGradient(cx - 0.3 * r, cy - 0.35 * r, 0.15 * r, cx + 0.1 * r, cy + 0.1 * r, 1.12 * r)
         g.add_color_stop_rgb(0, *HEAD)
         g.add_color_stop_rgb(0.72, *HEAD)
         g.add_color_stop_rgb(1, *HEAD_SHADE)

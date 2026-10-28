@@ -121,9 +121,10 @@ card("backdrop", f"{A}/a_backdrop.png", (0, 30, -6), 30, cast=False, strength=1.
 card("banner_red", f"{A}/a_banner_red.png", (-2.15, 2.9, 0), 4.6)
 card("banner_teal", f"{A}/a_banner_teal.png", (2.25, 2.9, 0), 4.6)
 card("barrel", f"{A}/a_barrel.png", (1.05, 1.5, 0), 2.3)
-card("king_red", f"{A}/king_red.png", (-1.05, 0.65, 0), 2.75)
-card("smith", f"{A}/smith.png", (0.05, 1.05, 0), 2.55)
-card("king_teal", f"{A}/king_teal.png", (1.3, 0.6, 0), 2.75)
+if not __import__("os").environ.get("NOCHARS"):  # NOCHARS=1: background plate only (2D characters go on top)
+    card("king_red", f"{A}/king_red.png", (-1.05, 0.65, 0), 2.75)
+    card("smith", f"{A}/smith.png", (0.05, 1.05, 0), 2.55)
+    card("king_teal", f"{A}/king_teal.png", (1.3, 0.6, 0), 2.75)
 card("anvil", f"{A}/a_anvil.png", (-0.35, -0.1, 0), 0.95)
 card("table", f"{A}/a_table.png", (0, -2.25, 0.02), 2.2, flat=True, cast=False)
 
