@@ -104,3 +104,17 @@ What makes it fast:
 Run `python3 analysis/flow.py <animation.mp4>` (use the caption-free render) and `python3 analysis/shots.py <video> out.json`, then compare with sections 1 and 8.
 
 `animator/engine.py: ref_camera()` applies sections 1 and 8 to every shot. Give each shot a `focus` (the face or object to push toward), a `cap` for busy frames, and a `speaker` (the character whose mouth follows the voice).
+
+## 10. Phrase-level camera (a new framing every 2-4 words)
+Read at 5 fps, the reference never waits for a sentence to end. Every phrase gets its own framing, and the camera **travels** to it:
+- **Crane / drone up to reveal:** building-side tilt up into an aerial over the city ("gambling hall on almost every street"); pull back and rise to show the army ("had the biggest army in the world"), then come back down to the character.
+- **Follow the object:** tilt from the dragon's mouth down to the frog's mouth as the ball would fall ("a frog's open mouth").
+- **Move through space:** walk alongside characters, push through the doorway into the room ("to a tiny room").
+- **Insert on the noun:** "ticking clock" → clock, "pocket watch" → watch close-up.
+- Dissolves only when the place changes, and the camera keeps moving through them.
+
+Rule used by the animator: a shot has `keys = [(word_time, zoom, (x, y)), ...]`. The camera **arrives on the word** it illustrates, moving over ~0.4-0.75 s with an ease in-out, dips its zoom on long moves (drone feel), gets motion blur when fast, and keeps creeping (zoom +7%/s, slight slide) while it holds. Whooshes are added under every big move.
+
+Example (the user's): "A mill owner | built | the clock tower | that lied | to the entire city | for ten years | nobody noticed" → owner close-up under the tower → he points up, camera cranes up the tower → clock → clock smirks, push in → drone pull back over the city → day/night time-lapse → camera comes down to the street where people walk past.
+
+Measured on that cut (`analysis/flow.py`): camera median 6.2 / mean 23.8 % width/s (reference 5.9-15.1 / 10.4-23.5).

@@ -500,7 +500,7 @@ def draw_sandwich(ctx, x, y, rot=0.0):
 
 
 # ---------- parallax ----------
-_CAM = {"z": 1.0, "c": (W / 2, H / 2), "z0": 1.0, "c0": (W / 2, H / 2)}
+_CAM = {"z": 1.0, "c": (W / 2, H / 2), "z0": 1.0, "c0": (W / 2, H / 2), "strength": 1.0}
 
 
 def _parallax(fn, default):
@@ -508,6 +508,7 @@ def _parallax(fn, default):
     k>1 is foreground (moves more). Gives the flat 2D sets a 3D-like camera."""
     def wrapper(ctx, *a, depth=None, **kw):
         k = depth if depth is not None else default(a, kw)
+        k = 1 - (1 - k) * _CAM["strength"]
         if abs(k - 1) < 1e-3:
             return fn(ctx, *a, **kw)
         z, (cx, cy), z0, (x0, y0) = _CAM["z"], _CAM["c"], _CAM["z0"], _CAM["c0"]
@@ -567,7 +568,7 @@ def sky(ctx, top, bottom, y0=-400, y1=H + 200):
     g.add_color_stop_rgb(0, *top)
     g.add_color_stop_rgb(1, *bottom)
     ctx.set_source(g)
-    ctx.rectangle(-600, -800, W + 1200, H + 1600)
+    ctx.rectangle(-3000, -5000, W + 6000, H + 10000)
     ctx.fill()
 
 
@@ -851,6 +852,52 @@ def _vignette(ctx, k):
     ctx.paint()
 
 
+def key_camera(keys, T):
+    """Camera from keyframes [(time, zoom, (cx, cy)), ...] in absolute seconds.
+    The camera *arrives* at each framing on its key time (the key word), moving
+    with an ease-in-out over the preceding ~0.55 s, and keeps a slow push while
+    it holds. Long moves dip the zoom mid-way like a drone pull-back."""
+    def drift(k, since):
+        # between moves the camera keeps creeping in and sideways (it never fully stops)
+        z, c = k[1], k[2]
+        since = max(0.0, since)
+        return z * (1 + 0.07 * since), (c[0] + 14 * since, c[1] - 10 * since)
+    if T <= keys[0][0]:
+        return keys[0][1], keys[0][2]
+    for i in range(1, len(keys)):
+        t1 = keys[i][0]
+        t0 = keys[i - 1][0]
+        m = keys[i][3] if len(keys[i]) > 3 else min(0.55, 0.75 * (t1 - t0))
+        if T < t1 - m:
+            return drift(keys[i - 1], T - t0)
+        if T < t1:
+            za, ca = drift(keys[i - 1], t1 - m - t0)
+            zb, cb = keys[i][1], keys[i][2]
+            x = (T - (t1 - m)) / m
+            p = 4 * x ** 3 if x < 0.5 else 1 - (-2 * x + 2) ** 3 / 2   # cubic ease in-out
+            dist = math.hypot(cb[0] - ca[0], cb[1] - ca[1])
+            bump = 0.22 if dist > 350 else 0.0
+            z = math.exp(lerp(math.log(za), math.log(zb), p)) * (1 - bump * math.sin(PI * p))
+            return z, (lerp(ca[0], cb[0], p), lerp(ca[1], cb[1], p))
+    return drift(keys[-1], T - keys[-1][0])
+
+
+def _motion_blur(surf, dx, dy):
+    """Directional blur for fast camera moves (screen px per frame)."""
+    import cv2
+    a = np.ndarray((H, W, 4), np.uint8, surf.get_data())
+    lx, ly = int(min(abs(dx) * 0.9, 41)), int(min(abs(dy) * 0.9, 41))
+    if lx < 5 and ly < 5:
+        return
+    b = a
+    if lx >= 5:
+        b = cv2.blur(b, (lx, 1))
+    if ly >= 5:
+        b = cv2.blur(b, (1, ly))
+    a[:] = b
+    surf.mark_dirty()
+
+
 def _draw_shot(shot, t, surf, rng_noise):
     ctx = cairo.Context(surf)
     ctx.set_source_rgb(0, 0, 0)
@@ -858,9 +905,17 @@ def _draw_shot(shot, t, surf, rng_noise):
     d = shot["end"] - shot["start"]
     # ease=False: reference-style move that starts fast and settles (ease-out)
     p = ease(t / d) if shot.get("ease", True) else 1 - (1 - clamp(t / d)) ** 1.3
-    z0, z1, c0, c1 = shot.get("cam", (1.0, 1.06, (W / 2, H / 2), (W / 2, H / 2)))
-    z = lerp(z0, z1, p)
-    cx, cy = lerp(c0[0], c1[0], p), lerp(c0[1], c1[1], p)
+    keys = shot.get("keys")
+    if keys:
+        T = shot["start"] + t
+        z, (cx, cy) = key_camera(keys, T)
+        zp, (px, py) = key_camera(keys, T - 1 / FPS)
+        z0, c0 = keys[0][1], keys[0][2]
+        shot["_vel"] = ((cx - px) * z, (cy - py) * z + (z - zp) * H * 0.5)
+    else:
+        z0, z1, c0, c1 = shot.get("cam", (1.0, 1.06, (W / 2, H / 2), (W / 2, H / 2)))
+        z = lerp(z0, z1, p)
+        cx, cy = lerp(c0[0], c1[0], p), lerp(c0[1], c1[1], p)
     for bt, mult in shot.get("beats", ()):
         # punch-in cut inside a long shot: closer framing on the focus
         if t >= bt:
@@ -880,7 +935,8 @@ def _draw_shot(shot, t, surf, rng_noise):
         ctx.rotate(shot["dutch"])
     ctx.scale(z, z)
     ctx.translate(-cx, -cy)
-    _CAM.update(z=z, c=(cx, cy), z0=z0, c0=c0)
+    # keyframed shots travel far, so soften parallax to keep objects where the keys expect them
+    _CAM.update(z=z, c=(cx, cy), z0=z0, c0=c0, strength=0.3 if keys else 1.0)
     _NOW.update(t=shot["start"] + t, speaker=shot.get("speaker"))
     shot["draw"](ctx, t, d)
     ctx.restore()
@@ -888,9 +944,13 @@ def _draw_shot(shot, t, surf, rng_noise):
         shot["overlay"](ctx, t, d)
     _vignette(ctx, shot.get("vignette", 0.45))
     surf.flush()
-    if shot.get("dof", 0) and "focus" in shot:
+    if shot.get("dof", 0) and keys:
+        _dof(surf, (W / 2, H * 0.47), shot["dof"])
+    elif shot.get("dof", 0) and "focus" in shot:
         fx, fy = shot["focus"]
         _dof(surf, ((fx - cx) * z + W / 2, (fy - cy) * z + H / 2), shot["dof"])
+    if keys and shot.get("blur", True):
+        _motion_blur(surf, *shot["_vel"])
     if shot.get("sepia"):
         a = np.ndarray((H, W, 4), np.uint8, surf.get_data())
         g = a[:, :, :3].astype(np.float32).mean(axis=2, keepdims=True)
@@ -958,7 +1018,7 @@ def ref_camera(shots, rate=0.4, cap=2.0, drift=(18, -45), beat=1.25, travel_px=(
     object) when given; `cap` limits the zoom for busy frames. hold=True keeps the
     shot's own camera."""
     for s in shots:
-        if s.get("hold"):
+        if s.get("hold") or s.get("keys"):
             continue
         dur = s["end"] - s["start"]
         travel = min(s.get("cap", cap), 1 + rate * dur)
