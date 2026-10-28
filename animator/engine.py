@@ -839,3 +839,24 @@ def render(shots, total, out_path, xfade=0.35, grain=9, fade_out=0.6):
             print(f"frame {f}/{nframes}", flush=True)
     proc.stdin.close()
     proc.wait()
+
+
+def ref_camera(shots, rate=0.18, cap=1.6, drift=(18, -45)):
+    """Apply the measured reference camera (visual_grammar.md): about 0.18x zoom per
+    second at a near-constant speed, push-ins drifting up and sideways, pull-outs
+    covering a similar distance. A push ends centred on the shot's `focus` (a face or
+    object) when given; `cap` limits the zoom for busy frames. hold=True keeps the
+    shot's own camera."""
+    for s in shots:
+        if s.get("hold"):
+            continue
+        dur = s["end"] - s["start"]
+        travel = min(s.get("cap", cap), 1 + rate * dur)
+        z0, z1, c0, c1 = s.get("cam", (1.0, 1.06, (W / 2, H / 2), (W / 2, H / 2)))
+        if z1 >= z0:
+            z1 = max(z1, z0 * travel)
+            c1 = s["focus"] if "focus" in s else (c1[0] + drift[0], c1[1] + drift[1])
+        else:
+            z0 = max(z0, z1 * travel)
+        s["cam"] = (z0, z1, c0, c1)
+        s["ease"] = False

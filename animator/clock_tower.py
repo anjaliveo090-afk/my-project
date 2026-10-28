@@ -4,7 +4,7 @@ import math
 from engine import (W, H, Char, clamp, cobbles, disc, ease, glow, hexc, hills, hourglass,
                     houses, keyed, label, lerp, lerpc, mill, moon, pop, render, rrect,
                     shafts, sky, stars, sun, text, tower, bokeh, bricks, clock_face,
-                    draw_sandwich, fill_stroke, ellipse, INK)
+                    draw_sandwich, fill_stroke, ellipse, INK, ref_camera)
 
 TOTAL = 60.66
 
@@ -381,28 +381,29 @@ def s_final(ctx, t, d):
 
 C = (W / 2, H / 2)
 SHOTS = [
-    dict(start=0.00, draw=s_town, cam=(1.0, 1.15, (360, 560), (330, 700))),
+    dict(start=0.00, draw=s_town, cam=(1.0, 1.15, (360, 560), (330, 700)), focus=(270, 620)),
     dict(start=2.60, draw=s_clock, cam=(1.0, 1.12, (360, 640), (360, 600))),
-    dict(start=5.32, draw=s_crowd, cam=(1.0, 1.1, C, (360, 760))),
-    dict(start=8.00, draw=s_bell, cam=(1.06, 1.1, (300, 680), (460, 700))),
+    dict(start=5.32, draw=s_crowd, cam=(1.0, 1.1, C, (360, 760)), focus=(370, 980)),
+    dict(start=8.00, draw=s_bell, cam=(1.06, 1.1, (300, 680), (460, 700)), focus=(380, 960), cap=1.35),
     dict(start=11.53, draw=s_salute, cam=(1.0, 1.08, C, (360, 680))),
     dict(start=13.10, draw=s_arrive, cam=(1.0, 1.25, (360, 760), (420, 720))),
     dict(start=16.99, draw=s_week, cam=(1.0, 1.08, C, (330, 760))),
-    dict(start=20.48, draw=s_dawn, cam=(1.0, 1.06, C, C)),
+    dict(start=20.48, draw=s_dawn, cam=(1.0, 1.06, C, C), cap=1.15),
     dict(start=23.05, draw=s_dusk, cam=(1.06, 1.0, C, C)),
-    dict(start=25.42, draw=s_hourglass, cam=(1.0, 1.1, C, (360, 680))),
-    dict(start=29.85, draw=s_foreman, cam=(1.0, 1.1, C, (400, 720)), shake=(0.9, 6)),
+    dict(start=25.42, draw=s_hourglass, cam=(1.0, 1.1, C, (360, 680)), cap=1.12),
+    dict(start=29.85, draw=s_foreman, cam=(1.0, 1.1, C, (400, 720)), focus=(440, 900), shake=(0.9, 6)),
     dict(start=33.07, draw=s_wag, cam=(1.0, 1.06, C, C)),
     dict(start=34.35, draw=s_workers, cam=(1.0, 1.15, C, (440, 820))),
     dict(start=37.55, draw=s_office, cam=(1.18, 1.0, (330, 820), C), shake=(1.9, 5)),
-    dict(start=40.90, draw=s_listen, cam=(1.0, 1.1, C, (360, 600))),
-    dict(start=44.06, draw=s_cold, cam=(1.0, 1.12, C, (420, 560)), vignette=0.75),
+    dict(start=40.90, draw=s_listen, cam=(1.0, 1.1, C, (360, 600)), focus=(360, 820)),
+    dict(start=44.06, draw=s_cold, cam=(1.0, 1.12, C, (420, 560)), focus=(430, 800), cap=1.3, vignette=0.75),
     dict(start=46.46, draw=s_leave, cam=(1.2, 1.0, (330, 900), C)),
-    dict(start=51.05, draw=s_history, cam=(1.0, 1.06, C, C), sepia=True),
+    dict(start=51.05, draw=s_history, cam=(1.0, 1.06, C, C), cap=1.12, sepia=True),
     dict(start=57.77, draw=s_final, cam=(1.3, 1.0, (360, 420), C)),
 ]
 for k, s in enumerate(SHOTS):
     s["end"] = SHOTS[k + 1]["start"] if k + 1 < len(SHOTS) else TOTAL
+ref_camera(SHOTS)
 
 # SFX cue sheet: (time, file, volume)
 SFX = [(s["start"] - 0.18, "whoosh.wav", 0.45) for s in SHOTS[1:]]
