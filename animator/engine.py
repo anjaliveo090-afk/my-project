@@ -12,6 +12,7 @@ import numpy as np
 W, H, FPS = 720, 1280, 30
 INK = (0.10, 0.09, 0.12)
 PI = math.pi
+ENERGY = 2.0  # character motion multiplier (idle sway, head and hand movement)
 
 
 # ---------- helpers ----------
@@ -151,7 +152,8 @@ class Char:
         lw = 6.0
         ctx.set_line_cap(cairo.LINE_CAP_ROUND)
         ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-        dy = -abs(math.sin(t * 2 * PI * 1.1)) * 4 * bob
+        e = ENERGY * bob
+        dy = -abs(math.sin(t * 2 * PI * 2.0)) * 7 * e
         hip_y = -85 + dy
 
         # legs
@@ -183,7 +185,7 @@ class Char:
         # upper body (leans around the hip)
         ctx.save()
         ctx.translate(0, hip_y)
-        ctx.rotate(lean)
+        ctx.rotate(lean + math.sin(t * 2.7) * 0.06 * e)
         rrect(ctx, -37, -105, 74, 112, 34)
         fill_stroke(ctx, self.body, 5)
         if self.tie:
@@ -195,7 +197,7 @@ class Char:
             ctx.close_path()
             fill_stroke(ctx, self.tie, 2.5)
 
-        hcx, hcy = 0, -105 - 52 + head_nod
+        hcx, hcy = 0, -105 - 52 + head_nod + math.sin(t * 4.3) * 3 * e
         r = 64
         # head
         ctx.new_sub_path()
@@ -230,6 +232,9 @@ class Char:
                 hx, hy = sx + side * 50, sy - 6
             else:
                 hx, hy = sx + side * 16, sy + 74
+            if a not in ("salute", "write"):
+                hx += math.sin(t * 3.8 + side) * 6 * e
+                hy += math.cos(t * 3.1 + side) * 5 * e
             mx, my = (sx + hx) / 2, (sy + hy) / 2
             ctx.move_to(sx, sy)
             ctx.curve_to(mx + side * 14, my, mx + side * 14, my, hx, hy)
@@ -279,6 +284,31 @@ class Char:
             for side in (-1, 1):
                 ellipse(ctx, cx + side * r * 0.92, cy - r * 0.2, r * 0.16, r * 0.32)
                 fill_stroke(ctx, self.hair_col, 3)
+
+
+# ---------- lip-sync from the voiceover ----------
+_VOICE = {"env": None}
+_NOW = {"t": 0.0, "speaker": None}
+
+
+def set_voice(path):
+    """Load the voiceover loudness (30 values per second) to drive mouths."""
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-ac", "1", "-ar", "16000",
+                          "-f", "s16le", "-"], capture_output=True, check=True).stdout
+    x = np.frombuffer(raw, np.int16).astype(np.float32)
+    hop = 16000 // FPS
+    n = len(x) // hop
+    rms = np.sqrt((x[:n * hop].reshape(n, hop) ** 2).mean(1))
+    _VOICE["env"] = np.clip(rms / (np.percentile(rms, 95) + 1e-6), 0, 1)
+
+
+def voice_level():
+    env = _VOICE["env"]
+    if env is None:
+        return 0.0
+    i = int(_NOW["t"] * FPS)
+    v = float(env[i]) if 0 <= i < len(env) else 0.0
+    return 0.0 if v < 0.45 else (0.55 if v < 0.8 else 1.0)  # snap to 3 mouth sizes, closed between syllables
 
 
 def draw_face(ctx, cx, cy, r, expr, t, talk, look, ch=None):
@@ -345,13 +375,31 @@ def draw_face(ctx, cx, cy, r, expr, t, talk, look, ch=None):
     my = cy + 0.47 * r
     mx = cx + lx * 1.2
     mouth = expr
-    if talk and expr in ("neutral", "determined", "worried", "smirk", "sad", "happy"):
+    level = 0.0
+    speaking = talk or (ch is not None and _NOW["speaker"] is ch)
+    if speaking and _VOICE["env"] is not None:
+        level = voice_level()
+        if level > 0 and expr not in ("laugh", "shock"):
+            mouth = "open"
+    elif talk and expr in ("neutral", "determined", "worried", "smirk", "sad", "happy"):
         if int(t * 9) % 2 == 0:
             mouth = "talk"
     if ch is not None and ch.mustache:
         my += r * 0.06
     if mouth == "talk":
         ellipse(ctx, mx, my, r * 0.11, r * 0.08)
+        fill_stroke(ctx, hexc("#6b1f24"), 3.5)
+    elif mouth == "open" and expr == "grin":
+        # the reference boss: teeth grin opens into a laugh shape while talking
+        ctx.new_sub_path()
+        ctx.arc(mx, my - r * 0.08, r * (0.2 + 0.12 * level), 0, PI)
+        ctx.close_path()
+        fill_stroke(ctx, hexc("#7a1f28"), 4)
+        rrect(ctx, mx - r * 0.18, my - r * 0.08, r * 0.36, r * 0.08, 2)
+        src(ctx, (1, 1, 1))
+        ctx.fill()
+    elif mouth == "open":
+        ellipse(ctx, mx, my + r * 0.02, r * (0.1 + 0.06 * level), r * (0.05 + 0.1 * level))
         fill_stroke(ctx, hexc("#6b1f24"), 3.5)
     elif mouth in ("neutral", "determined"):
         line(mx - r * 0.13, my, mx + r * 0.13, my)
@@ -449,6 +497,30 @@ def draw_sandwich(ctx, x, y, rot=0.0):
         fill_stroke(ctx, hexc(col), 3)
     ctx.restore()
 
+
+
+# ---------- parallax ----------
+_CAM = {"z": 1.0, "c": (W / 2, H / 2), "z0": 1.0, "c0": (W / 2, H / 2)}
+
+
+def _parallax(fn, default):
+    """Draw a layer with depth k: k<1 is farther (moves less with the camera),
+    k>1 is foreground (moves more). Gives the flat 2D sets a 3D-like camera."""
+    def wrapper(ctx, *a, depth=None, **kw):
+        k = depth if depth is not None else default(a, kw)
+        if abs(k - 1) < 1e-3:
+            return fn(ctx, *a, **kw)
+        z, (cx, cy), z0, (x0, y0) = _CAM["z"], _CAM["c"], _CAM["z0"], _CAM["c0"]
+        zk = z0 + (z - z0) * k
+        ckx, cky = x0 + (cx - x0) * k, y0 + (cy - y0) * k
+        ctx.save()
+        ctx.translate(cx, cy)
+        ctx.scale(zk / z, zk / z)
+        ctx.translate(-ckx, -cky)
+        fn(ctx, *a, **kw)
+        ctx.restore()
+    wrapper.__name__ = fn.__name__
+    return wrapper
 
 # ---------- props & backgrounds ----------
 def clock_face(ctx, cx, cy, r, h, m, rim="#3a2c26", face="#fbf3dc", lw=None, glow=0.0, eyes=None):
@@ -637,7 +709,7 @@ def mill(ctx, x, base, s, t, lit=0.0, gate=True):
         ctx.rectangle(sx, base - h - 260 * s, 50 * s, 300 * s)
         fill_stroke(ctx, hexc("#7d4636"), 4)
         for p in range(6):
-            ph = (t * 0.35 + p / 6 + k * 0.3) % 1
+            ph = (t * 0.6 + p / 6 + k * 0.3) % 1
             px = sx + 25 * s + math.sin(ph * 5 + k) * 18 * s + ph * 60 * s
             py = base - h - 270 * s - ph * 300 * s
             ctx.set_source_rgba(0.85, 0.85, 0.88, 0.55 * (1 - ph))
@@ -692,7 +764,7 @@ def cobbles(ctx, y0, top_col, bot_col, y1=H + 400):
 
 def shafts(ctx, t, col=(1, 0.9, 0.6), a=0.18, x=-100):
     for k in range(3):
-        sx = x + k * 170 + math.sin(t * 0.7 + k) * 15
+        sx = x + k * 170 + math.sin(t * 1.4 + k) * 22
         g = cairo.LinearGradient(sx, 0, sx + 500, H)
         g.add_color_stop_rgba(0, *col, a)
         g.add_color_stop_rgba(1, *col, 0)
@@ -709,7 +781,7 @@ def bokeh(ctx, seed, n, t, col, a=0.25):
     rnd = random.Random(seed)
     for _ in range(n):
         x = rnd.uniform(-100, W + 100) + math.sin(t * 0.4 + rnd.random() * 6) * 20
-        y = (rnd.uniform(0, H) - t * rnd.uniform(5, 25)) % (H + 200) - 100
+        y = (rnd.uniform(0, H) - t * rnd.uniform(15, 50)) % (H + 200) - 100
         r = rnd.uniform(6, 26)
         glow(ctx, x, y, r, col, a * rnd.uniform(0.4, 1))
 
@@ -758,6 +830,18 @@ def hourglass(ctx, cx, cy, s, fill_top):
     ctx.fill()
 
 
+# depth of each background helper (scaled sets: smaller scale = farther away)
+sky = _parallax(sky, lambda a, kw: 0.15)
+stars = _parallax(stars, lambda a, kw: 0.2)
+sun = _parallax(sun, lambda a, kw: 0.25)
+moon = _parallax(moon, lambda a, kw: 0.25)
+hills = _parallax(hills, lambda a, kw: 0.45)
+houses = _parallax(houses, lambda a, kw: min(1.0, a[2] * 0.9))
+tower = _parallax(tower, lambda a, kw: min(1.0, a[2]))
+mill = _parallax(mill, lambda a, kw: min(1.0, a[2]))
+bokeh = _parallax(bokeh, lambda a, kw: 1.35)
+
+
 # ---------- render ----------
 def _vignette(ctx, k):
     g = cairo.RadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, H * 0.75)
@@ -772,10 +856,17 @@ def _draw_shot(shot, t, surf, rng_noise):
     ctx.set_source_rgb(0, 0, 0)
     ctx.paint()
     d = shot["end"] - shot["start"]
-    p = ease(t / d) if shot.get("ease", True) else clamp(t / d)
+    # ease=False: reference-style move that starts fast and settles (ease-out)
+    p = ease(t / d) if shot.get("ease", True) else 1 - (1 - clamp(t / d)) ** 1.3
     z0, z1, c0, c1 = shot.get("cam", (1.0, 1.06, (W / 2, H / 2), (W / 2, H / 2)))
     z = lerp(z0, z1, p)
     cx, cy = lerp(c0[0], c1[0], p), lerp(c0[1], c1[1], p)
+    for bt, mult in shot.get("beats", ()):
+        # punch-in cut inside a long shot: closer framing on the focus
+        if t >= bt:
+            z *= mult
+            fx, fy = shot.get("focus", (cx, cy))
+            cx, cy = lerp(cx, fx, 0.6), lerp(cy, fy, 0.6)
     shake = shot.get("shake")
     if shake:
         st, amp = shake
@@ -787,6 +878,8 @@ def _draw_shot(shot, t, surf, rng_noise):
     ctx.translate(W / 2, H / 2)
     ctx.scale(z, z)
     ctx.translate(-cx, -cy)
+    _CAM.update(z=z, c=(cx, cy), z0=z0, c0=c0)
+    _NOW.update(t=shot["start"] + t, speaker=shot.get("speaker"))
     shot["draw"](ctx, t, d)
     ctx.restore()
     if shot.get("overlay"):
@@ -801,7 +894,7 @@ def _draw_shot(shot, t, surf, rng_noise):
         surf.mark_dirty()
 
 
-def render(shots, total, out_path, xfade=0.35, grain=9, fade_out=0.6):
+def render(shots, total, out_path, xfade=0.22, grain=9, fade_out=0.6):
     surf_a = cairo.ImageSurface(cairo.FORMAT_RGB24, W, H)
     surf_b = cairo.ImageSurface(cairo.FORMAT_RGB24, W, H)
     rs = np.random.default_rng(3)
@@ -841,7 +934,7 @@ def render(shots, total, out_path, xfade=0.35, grain=9, fade_out=0.6):
     proc.wait()
 
 
-def ref_camera(shots, rate=0.18, cap=1.6, drift=(18, -45)):
+def ref_camera(shots, rate=0.4, cap=2.0, drift=(18, -45), beat=1.25, travel_px=(100, 150)):
     """Apply the measured reference camera (visual_grammar.md): about 0.18x zoom per
     second at a near-constant speed, push-ins drifting up and sideways, pull-outs
     covering a similar distance. A push ends centred on the shot's `focus` (a face or
@@ -856,7 +949,12 @@ def ref_camera(shots, rate=0.18, cap=1.6, drift=(18, -45)):
         if z1 >= z0:
             z1 = max(z1, z0 * travel)
             c1 = s["focus"] if "focus" in s else (c1[0] + drift[0], c1[1] + drift[1])
+            # the reference camera also travels sideways and up while it zooms
+            c0 = (c1[0] - travel_px[0], c1[1] + travel_px[1])
         else:
             z0 = max(z0, z1 * travel)
         s["cam"] = (z0, z1, c0, c1)
         s["ease"] = False
+        # long push-ins get a punch-in cut halfway so a new frame comes every ~2 s
+        if z1 > z0 and dur > 2.4 and "focus" in s and "cap" not in s:
+            s["beats"] = [(dur * 0.52, beat)]

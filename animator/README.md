@@ -10,7 +10,7 @@ Code-drawn version of the reference style (no AI video model): big-head stick ch
 ```bash
 O=output/clock_tower
 python3 animator/audio.py $O/sfx 60.66
-(cd animator && python3 clock_tower.py ../$O/clips/animation.mp4 ../$O/cues.json)
+(cd animator && python3 clock_tower.py ../$O/clips/animation.mp4 ../$O/cues.json ../voice.mp3)  # voice drives lip-sync
 python3 assembler/assemble.py --clips $O/clips --voice voice.mp3 --srt $O/captions.srt --words 2 \
   --sfx $O/cues.json --sfx-dir $O/sfx --music $O/sfx/music.wav --music-volume 0.2 --crf 23 \
   --out $O/clock_tower_final.mp4

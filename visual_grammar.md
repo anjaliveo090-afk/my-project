@@ -79,17 +79,25 @@ The camera never sits still. A shot with no move is a deliberate pause.
 4. Put the expression snap on the key word's timestamp.
 5. Join every shot with a 0.3-0.4 s cross-dissolve and a whoosh.
 
-## 8. Checking a render against the reference
-Run `python3 analysis/shots.py <video> out.json` on the new video and compare with the reference numbers in section 1.
+## 8. Pace: why the reference feels fast
+Measured with `analysis/flow.py`: optical flow on edges only, so flat cartoon art and detailed art are compared fairly. The caption band is ignored. Units: % of frame width per second.
 
-Clock-tower video (v2), measured the same way:
+| | Reference (3 videos) | Clock tower v1 | Clock tower v3 |
+|---|---|---|---|
+| Camera speed on screen (median) | 5.9 / 15.1 / 9.1 | 6.4 | **10.0** |
+| Camera speed (mean) | 10.4 / 23.5 / 15.7 | 8.6 | **11.0** |
+| Non-camera motion (characters, objects, parallax) | 3.6 / 7.2 / 7.2 | 2.9 | **4.5** |
 
-| | Reference | Clock tower v2 |
-|---|---|---|
-| Push-in / pull-out | 55% / 32% | 75% / 25% |
-| Zoom speed | 0.17x per second | 0.16x per second |
-| Push-ins drifting up | 88% | 100% |
-| Seconds per visual | ~2 s | ~3.2 s (too long: split long sentences into 2 visuals) |
-| Holds on emotional beats | 3% | none |
+What makes it fast:
+1. **The camera travels, not only zooms.** It slides sideways and up while pushing in (`ref_camera(travel_px=...)`), and starts fast then settles.
+2. **Faces carry the motion, not bodies.** Mouths change shape every 2-3 frames with the narration (grin → open laugh → flat), and expressions snap on key words. Bodies mostly hold a pose with a small sway. `set_voice()` drives the speaking character's mouth from the voiceover loudness.
+3. **Depth.** Near things move more than far things when the camera moves (parallax). Sky, stars, hills, far houses are drawn as slower layers.
+4. **A new frame every ~2 s.** Long shots get a punch-in cut halfway (`beats`).
+5. **Short dissolves** (0.22 s).
 
-`animator/engine.py: ref_camera()` applies section 1 to every shot. Give each shot a `focus` (the face or object to push toward) and a `cap` for busy frames.
+`analysis/pace.py` (pixels changed) is kept for reference but over-reads detailed art, so use `flow.py` to compare.
+
+## 9. Checking a render against the reference
+Run `python3 analysis/flow.py <animation.mp4>` (use the caption-free render) and `python3 analysis/shots.py <video> out.json`, then compare with sections 1 and 8.
+
+`animator/engine.py: ref_camera()` applies sections 1 and 8 to every shot. Give each shot a `focus` (the face or object to push toward), a `cap` for busy frames, and a `speaker` (the character whose mouth follows the voice).
