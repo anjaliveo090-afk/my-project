@@ -7,7 +7,7 @@ Method: ffprobe, 1 fps contact sheets, 4 fps dense frames of motion-heavy moment
 - Vertical **9:16**, 720x1280, 30 fps. Total length 45-65 s (about 5-7 clips of 10 s).
 - In Flow switch **16:9 to 9:16**. Your current screenshot has 16:9 selected.
 - Burned-in captions: bold white sans-serif, black outline, 1-2 words at a time, lower-middle of the frame (about 70% down), word-by-word with the narration. Add these in the editor, do not ask Omni to render text.
-- Narration speed: about 2.7-3 words per second (SRT: about 170 words in 60 s).
+- Narration speed: about 3.5-4 words per second (measured per 10 s clip from the SRT: 2.9-4.9, video 1 average about 3.9). Fast, punchy delivery with almost no pauses.
 
 ## 2. Look (the core of the style)
 Hybrid: **simple 2D cartoon stick characters inside rich, cinematic, 3D-looking painted environments.**
