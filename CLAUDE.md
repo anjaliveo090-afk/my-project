@@ -12,4 +12,6 @@ When the user gives a voiceover, SRT or script, follow this workflow without bei
 
 Without Flow: `animator/` draws the whole video in code (`clock_tower2.py` is the model to copy: keyframed camera, a new framing every 2-4 words landing on the key word, see `visual_grammar.md` section 10) (see `animator/README.md`); use it when the user wants Claude Code to make the video itself. Use `style2.Char2` characters (the user's reference style). Call `ref_camera()` on the shot list, give each shot a `focus` on the main subject's face (keeps it centred, clear of captions and the Subscribe button), add `dof` and vary angles (`back_figure`, `dutch`), aim for a new visual every ~2 s, give each shot a `speaker` and pass the voice so mouths lip-sync, then check pace with `analysis/flow.py` (sections 8-9 of `visual_grammar.md`).
 
+Second style (kings / medieval / war look): read `style_medieval.md` and use `animator/style3.py` + `animator/medieval.py` instead of style2/office.
+
 Limits to state honestly: Claude Code cannot generate the AI video; Flow's Omni does. Face consistency needs Ingredients images. Do not copy the reference channel's characters or SFX files, only the style.

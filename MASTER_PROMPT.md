@@ -11,7 +11,8 @@ SETUP
 - Work on branch `claude/dazzling-hypatia-7p55ue` (all the tools live there; fetch and check it out first).
 - Read these before doing anything else, and follow them strictly:
   CLAUDE.md, style_bible.md, visual_grammar.md (all sections, especially 2, 3, 8, 10),
-  animator/README.md, assembler/README.md.
+  animator/README.md, assembler/README.md. For the kings/medieval look also read
+  style_medieval.md and use animator/style3.py + animator/medieval.py.
 - Use animator/clock_tower2.py and animator/job_room.py as templates to copy (office sets and props are in animator/office.py). Do not change engine.py or style2.py
   unless something is broken.
 
