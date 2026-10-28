@@ -10,6 +10,6 @@ When the user gives a voiceover, SRT or script, follow this workflow without bei
 6. After the user generates clips in Flow (9:16, Omni, 10 s) and saves them, assemble with `assembler/assemble.py` (see `assembler/README.md`).
 7. If the user shares a generated frame, compare it with the Style Bible and fix the prompt.
 
-Without Flow: `animator/` draws the whole video in code (see `animator/README.md`); use it when the user wants Claude Code to make the video itself. Call `ref_camera()` on the shot list, give each shot a `focus`, aim for a new visual every ~2 s, give each shot a `speaker` and pass the voice so mouths lip-sync, then check pace with `analysis/flow.py` (sections 8-9 of `visual_grammar.md`).
+Without Flow: `animator/` draws the whole video in code (see `animator/README.md`); use it when the user wants Claude Code to make the video itself. Use `style2.Char2` characters (the user's reference style). Call `ref_camera()` on the shot list, give each shot a `focus` on the main subject's face (keeps it centred, clear of captions and the Subscribe button), add `dof` and vary angles (`back_figure`, `dutch`), aim for a new visual every ~2 s, give each shot a `speaker` and pass the voice so mouths lip-sync, then check pace with `analysis/flow.py` (sections 8-9 of `visual_grammar.md`).
 
 Limits to state honestly: Claude Code cannot generate the AI video; Flow's Omni does. Face consistency needs Ingredients images. Do not copy the reference channel's characters or SFX files, only the style.

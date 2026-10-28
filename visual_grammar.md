@@ -43,10 +43,13 @@ The camera never sits still. A shot with no move is a deliberate pause.
 | 13 | Ends the story | **Return to an earlier location or symbol** | Pull-out or push to a sign | Small, alone | CAREER DEVELOPMENT ROOM door; police with clipboard |
 
 ## 3. Composition
+- **Safe zones for Shorts (720x1280):** keep the main subject (face or key object) between **y 250 and 820**, ideally centred around y 640. Captions sit at about y 860-940, and the YouTube Subscribe button, title and channel name cover roughly y 1040-1280. Feet and ground can go there; faces and key props must not.
+- In the animator, give every shot a `focus` at the subject's face: push-ins end with it centred, pull-outs end with it at 45% height.
 - Subject sits in the middle or lower-middle third, leaving the caption zone (about 70% down) readable.
 - **Foreground framing** for depth: a shoulder, a head, a cat or a desk edge cut off at the frame edge and slightly blurred.
 - Characters break the fourth wall: punchlines are delivered looking straight at the camera.
-- Strong depth of field: the background is softer than the subject in close-ups.
+- Strong depth of field: the background is softer than the subject in close-ups (`dof=3-5` on a shot blurs everything away from the focus).
+- Angle variety: over-the-shoulder (`style2.back_figure` in the foreground corner), dutch tilt for tension (`dutch=±0.05`), extreme close-ups, wide establishing shots, prop inserts.
 - One-point perspective for long spaces (corridors, aisles, streets).
 
 ## 4. Character performance

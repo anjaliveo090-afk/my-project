@@ -4,6 +4,7 @@ Code-drawn version of the reference style (no AI video model): big-head stick ch
 
 - `engine.py`: characters, expressions, props, backgrounds, camera, render to mp4.
 - `audio.py`: synthesised SFX (`whoosh`, `tick`, `bell`, `pop`, `sting`, ...) and a music bed.
+- `style2.py`: characters in the user's reference style (measured from their sheets: thick limbs, dark ball hands, big dark shoes, tall oval eyes, smooth fringe with highlights, collared outfits, soft shading) and `back_figure` for over-the-shoulder shots.
 - `clock_tower.py`: one story (19 shots timed to the voiceover) + its SFX cue sheet.
 
 ## Make the clock-tower video

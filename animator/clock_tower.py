@@ -1,6 +1,8 @@
 """Story: 'The clock tower that lied' - 19 shots timed to the voiceover."""
 import math
 
+from style2 import Char2, back_figure
+
 from engine import (W, H, Char, clamp, cobbles, disc, ease, glow, hexc, hills, hourglass,
                     houses, keyed, label, lerp, lerpc, mill, moon, pop, render, rrect,
                     shafts, sky, stars, sun, text, tower, bokeh, bricks, clock_face,
@@ -8,12 +10,13 @@ from engine import (W, H, Char, clamp, cobbles, disc, ease, glow, hexc, hills, h
 
 TOTAL = 60.66
 
-CLOCKMAKER = Char("#3f8f6b", hair="bowl", hair_col="#6b4226")
-FOREMAN = Char("#8a5a2b", hair="bald", hair_col="#6d6d6d", mustache="#3a2a20")
-MAYOR = Char("#24243a", hair="tophat", hair_col="#bdbdbd", mustache="#d8d8d8", tie="#c0392b")
-WORKERS = [Char(c, hair="cap", hair_col=h) for c, h in (
-    ("#3d6fb6", "#5b5b66"), ("#b8473d", "#6b4a33"), ("#d39b2a", "#4f4f5a"),
-    ("#7a4fa0", "#6b4a33"), ("#2f9a9a", "#5b5b66"))]
+# characters in the user's reference style (style2.Char2)
+CLOCKMAKER = Char2("#fbece8", hair="bowl", hair_col="#6d381c", outfit="apron", accent="#3e9a4a")
+FOREMAN = Char2("#c58b4e", hair="bald", hair_col="#6d6d6d", mustache="#3a2a20", outfit="shirt")
+MAYOR = Char2("#2b2d42", hair="tophat", hair_col="#c9c9c9", mustache="#d8d8d8", tie="#c0392b", outfit="suit")
+WORKERS = [Char2(c, hair="cap", hair_col="#2d2328", hat_col=h, outfit="shirt") for c, h in (
+    ("#88b3fb", "#5b5b66"), ("#e57373", "#6b4a33"), ("#f2b84b", "#4f4f5a"),
+    ("#9d7fd6", "#6b4a33"), ("#4fb3a9", "#5b5b66"))]
 
 NIGHT_TOP, NIGHT_BOT = hexc("#0e1638"), hexc("#3b2c66")
 DAWN_TOP, DAWN_BOT = hexc("#3a4d8f"), hexc("#f2a37a")
@@ -62,7 +65,7 @@ def s_crowd(ctx, t, d):
         else:
             expr = keyed(t, [(0, "neutral"), (1.9 + k * 0.08, "worried")])
             arms = keyed(t, [(0, ("down", "down")), (1.9 + k * 0.08, ("shrug", "shrug"))])
-        ch.draw(ctx, x, 1180 + (k % 2) * 25, 0.78, expr, t + k, arms=arms, look=(-0.4 if x > 360 else 0.4))
+        ch.draw(ctx, x, 1150 + (k % 2) * 25, 0.92, expr, t + k, arms=arms, look=(-0.4 if x > 360 else 0.4))
 
 
 # 3: the bell tells everyone when to work
@@ -164,7 +167,7 @@ def _compare(ctx, t, top, bot, sun_y, th, tm, wh, wm, tag, tag_col):
     ctx.set_line_width(6)
     ctx.stroke()
     text(ctx, "WATCH", 520, 930, 40, (1, 1, 1))
-    label(ctx, tag, 360, 1080, 62, tag_col, scale=pop(t - 0.8), tilt=-0.06)
+    label(ctx, tag, 450, 330, 62, tag_col, scale=pop(t - 0.8), tilt=-0.06)
 
 
 # 7: dawn: tower 20 minutes fast
@@ -184,12 +187,12 @@ def s_hourglass(ctx, t, d):
     glow(ctx, 360, 640, 520, (1, 0.7, 0.35), 0.25)
     hourglass(ctx, 360, 640, 1.25, 1 - t / d * 0.9)
     for k, ch in enumerate(WORKERS[:3]):
-        ch.draw(ctx, 90 + k * 90, 1170, 0.55, "sad", t + k, arms=("hold", "hold"), bob=0.5, look=0.5)
-    MAYOR.draw(ctx, 600, 1180, 0.8, keyed(t, [(0, "smirk"), (1.6, "grin")]), t, arms=("hip", "up"), look=-0.4)
+        ch.draw(ctx, 90 + k * 90, 1010, 0.55, "sad", t + k, arms=("hold", "hold"), bob=0.5, look=0.5)
+    MAYOR.draw(ctx, 600, 1030, 0.8, keyed(t, [(0, "smirk"), (1.6, "grin")]), t, arms=("hip", "up"), look=-0.4)
     for k in range(8):
         ph = (t * 0.9 + k / 8) % 1
         x = lerp(250, 600, ph)
-        y = 960 - math.sin(ph * math.pi) * 160
+        y = 850 - math.sin(ph * math.pi) * 160
         disc(ctx, x, y, 14, (*hexc("#f2c94c"), 1))
         ctx.arc(x, y, 14, 0, 2 * math.pi)
         ctx.set_source_rgb(*INK)
@@ -203,8 +206,6 @@ def s_foreman(ctx, t, d):
     sky(ctx, DAY_TOP, DAY_BOT)
     mill(ctx, 40, 1000, 1.1, t)
     cobbles(ctx, 990, hexc("#9c8a8a"), hexc("#5a4a5a"))
-    CLOCKMAKER.draw(ctx, 80, 1250, 1.0, "neutral", t, talk=t < 0.9, arms=("down", "show"),
-                    item="notebook", item_hand=1, look=0.7, bob=0.5)
     laughing = t >= 0.9
     expr = "laugh" if laughing else "neutral"
     lean = -0.18 + math.sin(t * 16) * 0.05 if laughing else 0
@@ -212,6 +213,7 @@ def s_foreman(ctx, t, d):
     FOREMAN.draw(ctx, 450, 1260, 1.25, expr, t, arms=("hip", "show" if has else "up"),
                  item="sandwich" if has else None, item_hand=1, lean=lean, bob=2.5 if laughing else 0.5,
                  look=-0.3)
+    back_figure(ctx, 90, 1060, 110, "#6d381c", "#fbece8")  # over the clockmaker's shoulder
     if not has:
         k = t - 1.9
         y = min(1240, 690 + 900 * k * k)
@@ -235,8 +237,7 @@ def s_workers(ctx, t, d):
         expr = keyed(t, [(0, "neutral"), (0.8 + k * 0.1, "angry")])
         arms = ("hip", "hip") if k == 1 else ("down", "down")
         ch.draw(ctx, 300 + k * 120, 1150 + (k % 2) * 40, 0.95, expr, t + k, arms=arms, look=-0.5)
-    CLOCKMAKER.draw(ctx, 70, 1300, 1.2, keyed(t, [(0, "neutral"), (1.4, "worried")]), t,
-                    talk=t < 0.8, look=0.7, arms=("down", "show"), item="notebook")
+    back_figure(ctx, 80, 1110, 120, "#6d381c", "#fbece8")  # over the clockmaker's shoulder
 
 
 # 13: the mayor... owns the mill
@@ -282,6 +283,7 @@ def s_listen(ctx, t, d):
     arms = ("hip", "show") if t < 2.3 else ("hip", "up")
     MAYOR.draw(ctx, 360, 1380, 2.0, "grin", t, arms=arms, item="notebook" if t < 2.3 else None,
                head_nod=nod, bob=0.2)
+    back_figure(ctx, 640, 1180, 130, "#6d381c", "#fbece8")  # over the clockmaker's shoulder
 
 
 # 15: "Whose clock is wrong, son? Yours, or mine?"
@@ -383,21 +385,21 @@ C = (W / 2, H / 2)
 SHOTS = [
     dict(start=0.00, draw=s_town, cam=(1.0, 1.15, (360, 560), (330, 700)), focus=(270, 620)),
     dict(start=2.60, draw=s_clock, cam=(1.0, 1.12, (360, 640), (360, 600)), focus=(370, 560)),
-    dict(start=5.32, draw=s_crowd, cam=(1.0, 1.1, C, (360, 760)), focus=(370, 980)),
-    dict(start=8.00, draw=s_bell, cam=(1.06, 1.1, (300, 680), (460, 700)), focus=(380, 960), cap=1.35),
-    dict(start=11.53, draw=s_salute, speaker=WORKERS[0], cam=(1.0, 1.08, C, (360, 680))),
-    dict(start=13.10, draw=s_arrive, speaker=CLOCKMAKER, cam=(1.0, 1.25, (360, 760), (420, 720)), focus=(390, 860)),
-    dict(start=16.99, draw=s_week, speaker=CLOCKMAKER, cam=(1.0, 1.08, C, (330, 760)), focus=(280, 860)),
+    dict(start=5.32, draw=s_crowd, cam=(1.0, 1.1, C, (360, 760)), focus=(370, 930), dof=3),
+    dict(start=8.00, draw=s_bell, cam=(1.06, 1.1, (300, 680), (460, 700)), focus=(380, 1000), cap=1.35),
+    dict(start=11.53, draw=s_salute, speaker=WORKERS[0], cam=(1.0, 1.08, C, (360, 680)), focus=(360, 880), dof=4),
+    dict(start=13.10, draw=s_arrive, speaker=CLOCKMAKER, cam=(1.0, 1.25, (360, 760), (420, 720)), focus=(360, 930), dof=4),
+    dict(start=16.99, draw=s_week, speaker=CLOCKMAKER, cam=(1.0, 1.08, C, (330, 760)), focus=(270, 860), dof=3),
     dict(start=20.48, draw=s_dawn, cam=(1.0, 1.06, C, C), cap=1.15),
     dict(start=23.05, draw=s_dusk, cam=(1.06, 1.0, C, C)),
     dict(start=25.42, draw=s_hourglass, speaker=MAYOR, cam=(1.0, 1.1, C, (360, 680)), cap=1.12),
-    dict(start=29.85, draw=s_foreman, cam=(1.0, 1.1, C, (400, 720)), focus=(440, 900), shake=(0.9, 6)),
-    dict(start=33.07, draw=s_wag, speaker=FOREMAN, cam=(1.0, 1.06, C, C)),
-    dict(start=34.35, draw=s_workers, cam=(1.0, 1.15, C, (440, 820)), focus=(460, 900)),
-    dict(start=37.55, draw=s_office, speaker=MAYOR, cam=(1.18, 1.0, (330, 820), C), shake=(1.9, 5)),
-    dict(start=40.90, draw=s_listen, speaker=MAYOR, cam=(1.0, 1.1, C, (360, 600)), focus=(360, 820)),
-    dict(start=44.06, draw=s_cold, speaker=MAYOR, cam=(1.0, 1.12, C, (420, 560)), focus=(430, 800), cap=1.3, vignette=0.75),
-    dict(start=46.46, draw=s_leave, cam=(1.2, 1.0, (330, 900), C)),
+    dict(start=29.85, draw=s_foreman, cam=(1.0, 1.1, C, (400, 720)), focus=(450, 950), dof=4, shake=(0.9, 6)),
+    dict(start=33.07, draw=s_wag, speaker=FOREMAN, cam=(1.0, 1.06, C, C), focus=(360, 840), cap=1.3, dof=4),
+    dict(start=34.35, draw=s_workers, cam=(1.0, 1.15, C, (440, 820)), focus=(480, 930), dof=4, dutch=0.05),
+    dict(start=37.55, draw=s_office, speaker=MAYOR, cam=(1.18, 1.0, (330, 820), C), focus=(470, 780), shake=(1.9, 5)),
+    dict(start=40.90, draw=s_listen, speaker=MAYOR, cam=(1.0, 1.1, C, (360, 600)), focus=(360, 900), dof=4),
+    dict(start=44.06, draw=s_cold, speaker=MAYOR, cam=(1.0, 1.12, C, (420, 560)), focus=(440, 880), cap=1.3, vignette=0.75, dof=5, dutch=-0.06),
+    dict(start=46.46, draw=s_leave, cam=(1.2, 1.0, (330, 900), C), focus=(290, 960), dof=3),
     dict(start=51.05, draw=s_history, speaker=MAYOR, cam=(1.0, 1.06, C, C), cap=1.12, sepia=True),
     dict(start=57.77, draw=s_final, cam=(1.3, 1.0, (360, 420), C)),
 ]

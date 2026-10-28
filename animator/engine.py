@@ -876,6 +876,8 @@ def _draw_shot(shot, t, surf, rng_noise):
             cy += math.cos(t * 53) * k
     ctx.save()
     ctx.translate(W / 2, H / 2)
+    if shot.get("dutch"):
+        ctx.rotate(shot["dutch"])
     ctx.scale(z, z)
     ctx.translate(-cx, -cy)
     _CAM.update(z=z, c=(cx, cy), z0=z0, c0=c0)
@@ -886,12 +888,27 @@ def _draw_shot(shot, t, surf, rng_noise):
         shot["overlay"](ctx, t, d)
     _vignette(ctx, shot.get("vignette", 0.45))
     surf.flush()
+    if shot.get("dof", 0) and "focus" in shot:
+        fx, fy = shot["focus"]
+        _dof(surf, ((fx - cx) * z + W / 2, (fy - cy) * z + H / 2), shot["dof"])
     if shot.get("sepia"):
         a = np.ndarray((H, W, 4), np.uint8, surf.get_data())
         g = a[:, :, :3].astype(np.float32).mean(axis=2, keepdims=True)
         tone = np.array([0.62, 0.82, 1.0], np.float32)  # B, G, R
         a[:, :, :3] = np.clip(g * tone * 1.05 + 10, 0, 255).astype(np.uint8)
         surf.mark_dirty()
+
+
+def _dof(surf, focus, strength):
+    """Depth of field: sharp around the focus point, blurred toward the edges."""
+    import cv2
+    a = np.ndarray((H, W, 4), np.uint8, surf.get_data())
+    blur = cv2.GaussianBlur(a, (0, 0), strength)
+    ys, xs = np.ogrid[0:H, 0:W]
+    d = np.sqrt(((xs - focus[0]) / (W * 0.42)) ** 2 + ((ys - focus[1]) / (H * 0.3)) ** 2)
+    m = np.clip(d - 0.6, 0, 1)[..., None].astype(np.float32)
+    a[:] = (a * (1 - m) + blur * m).astype(np.uint8)
+    surf.mark_dirty()
 
 
 def render(shots, total, out_path, xfade=0.22, grain=9, fade_out=0.6):
@@ -953,6 +970,9 @@ def ref_camera(shots, rate=0.4, cap=2.0, drift=(18, -45), beat=1.25, travel_px=(
             c0 = (c1[0] - travel_px[0], c1[1] + travel_px[1])
         else:
             z0 = max(z0, z1 * travel)
+            if "focus" in s:
+                c0 = s["focus"]
+                c1 = (c1[0], s["focus"][1] + 0.05 * H / z1)
         s["cam"] = (z0, z1, c0, c1)
         s["ease"] = False
         # long push-ins get a punch-in cut halfway so a new frame comes every ~2 s
