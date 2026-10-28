@@ -120,13 +120,16 @@ box("bench", (0.9, 2.6, 0.45), (0.9, 0.35, 0.45), brick_mat("bench", "#d9c7aa", 
 card("backdrop", f"{A}/a_backdrop.png", (0, 30, -6), 30, cast=False, strength=1.0)
 card("banner_red", f"{A}/a_banner_red.png", (-2.15, 2.9, 0), 4.6)
 card("banner_teal", f"{A}/a_banner_teal.png", (2.25, 2.9, 0), 4.6)
-card("barrel", f"{A}/a_barrel.png", (1.05, 1.5, 0), 2.3)
+ENV = __import__("os").environ
+if not ENV.get("NOPROPS"):  # NOPROPS=1: props are drawn in 2D by the animator instead
+    card("barrel", f"{A}/a_barrel.png", (1.05, 1.5, 0), 2.3)
 if not __import__("os").environ.get("NOCHARS"):  # NOCHARS=1: background plate only (2D characters go on top)
     card("king_red", f"{A}/king_red.png", (-1.05, 0.65, 0), 2.75)
     card("smith", f"{A}/smith.png", (0.05, 1.05, 0), 2.55)
     card("king_teal", f"{A}/king_teal.png", (1.3, 0.6, 0), 2.75)
-card("anvil", f"{A}/a_anvil.png", (-0.35, -0.1, 0), 0.95)
-card("table", f"{A}/a_table.png", (0, -2.25, 0.02), 2.2, flat=True, cast=False)
+if not ENV.get("NOPROPS"):
+    card("anvil", f"{A}/a_anvil.png", (-0.35, -0.1, 0), 0.95)
+    card("table", f"{A}/a_table.png", (0, -2.25, 0.02), 2.2, flat=True, cast=False)
 
 # warm low sun from behind-left: long shadows toward the camera-right, like the reference
 bpy.ops.object.light_add(type="SUN", rotation=(math.radians(64), 0, math.radians(-145)))
@@ -144,6 +147,9 @@ cam.data.dof.aperture_fstop = 1.2
 sc.camera = cam
 
 sc.render.resolution_x, sc.render.resolution_y = 720, 1280
+if ENV.get("WIDE"):  # 1.5x wider view at 1080x1920: a plate the 2D camera can push and pan over
+    sc.render.resolution_x, sc.render.resolution_y = 1080, 1920
+    cam.data.lens = cam.data.lens / 1.5
 sc.view_settings.view_transform = "Standard"
 sc.render.use_freestyle = True
 sc.render.line_thickness_mode = "ABSOLUTE"
