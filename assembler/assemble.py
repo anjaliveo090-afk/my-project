@@ -74,9 +74,11 @@ def main():
     p.add_argument("--sfx-dir", default=".", help="folder the SFX files are in")
     p.add_argument("--transition-sfx", help="SFX file played at every crossfade")
     p.add_argument("--music", help="background music, looped and kept quiet")
+    p.add_argument("--music-volume", type=float, default=0.12)
     p.add_argument("--xfade", type=float, default=0.4, help="crossfade seconds")
     p.add_argument("--words", type=int, default=2, help="words per caption")
     p.add_argument("--font", default="Arial")
+    p.add_argument("--crf", type=int, default=20, help="x264 quality, higher = smaller file")
     p.add_argument("--out", default="final.mp4")
     a = p.parse_args()
 
@@ -135,16 +137,16 @@ def main():
     if a.music:
         i = add_input(a.music)
         fc.append(f"[{i}:a]aformat=sample_rates=44100:channel_layouts=stereo,"
-                  f"aloop=loop=-1:size=2000000000,volume=0.12[a_mus]")
+                  f"aloop=loop=-1:size=2000000000,volume={a.music_volume}[a_mus]")
         mix.append("a_mus")
     cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", *inputs]
     if mix:
         fc.append("".join(f"[{m}]" for m in mix) +
-                  f"amix=inputs={len(mix)}:normalize=0:duration=longest[aout]")
+                  f"amix=inputs={len(mix)}:normalize=0:duration=longest,alimiter=limit=0.89[aout]")
     cmd += ["-filter_complex", ";".join(fc), "-map", "[vout]"]
     cmd += ["-map", "[aout]"] if mix else []
     out = Path(a.out).resolve()
-    cmd += ["-t", f"{target:.3f}", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+    cmd += ["-t", f"{target:.3f}", "-c:v", "libx264", "-preset", "medium", "-crf", str(a.crf),
             "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(out)]
     subprocess.run(cmd, check=True, cwd=tmp)
     print(f"wrote {out} ({target:.1f}s, {n} clips)")

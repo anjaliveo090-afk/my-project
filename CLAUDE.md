@@ -10,4 +10,6 @@ When the user gives a voiceover, SRT or script, follow this workflow without bei
 6. After the user generates clips in Flow (9:16, Omni, 10 s) and saves them, assemble with `assembler/assemble.py` (see `assembler/README.md`).
 7. If the user shares a generated frame, compare it with the Style Bible and fix the prompt.
 
+Without Flow: `animator/` draws the whole video in code (see `animator/README.md`); use it when the user wants Claude Code to make the video itself.
+
 Limits to state honestly: Claude Code cannot generate the AI video; Flow's Omni does. Face consistency needs Ingredients images. Do not copy the reference channel's characters or SFX files, only the style.
