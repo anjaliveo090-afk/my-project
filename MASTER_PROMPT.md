@@ -12,12 +12,12 @@ SETUP
 - Read these before doing anything else, and follow them strictly:
   CLAUDE.md, style_bible.md, visual_grammar.md (all sections, especially 2, 3, 8, 10),
   animator/README.md, assembler/README.md.
-- Use animator/clock_tower2.py as the template to copy. Do not change engine.py or style2.py
+- Use animator/clock_tower2.py and animator/job_room.py as templates to copy (office sets and props are in animator/office.py). Do not change engine.py or style2.py
   unless something is broken.
 
 STEP 1 - WORDS
-- Get word-level timings for the voice (the clock-tower flow used pocketsphinx + aligning a
-  clean script; Hugging Face downloads are blocked here). If I gave a script, align it to
+- Get word-level timings with `python3 analysis/align_words.py <voice> <script.txt|subs.srt> output/<story_name>`
+  (pocketsphinx offline; Hugging Face downloads are blocked here). If I gave a script, align it to
   the voice. If not, transcribe and show me the cleaned script so I can correct words.
 - Save script.txt, aligned.json and captions.srt in output/<story_name>/.
 

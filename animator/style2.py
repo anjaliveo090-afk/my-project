@@ -40,7 +40,8 @@ class Char2:
     """Same draw() signature as engine.Char, so stories can swap styles."""
 
     def __init__(self, body, hair="bowl", hair_col="#2d2328", outfit="shirt", accent=None,
-                 mustache=None, tie=None, hat_col="#24202c", lanyard=False, skin=None, glasses=False):
+                 mustache=None, tie=None, hat_col="#24202c", lanyard=False, skin=None, glasses=False,
+                 shades=False):
         self.body = hexc(body)
         self.hair = hair
         self.hair_col = hexc(hair_col)
@@ -52,6 +53,7 @@ class Char2:
         self.lanyard = lanyard
         self.skin = hexc(skin) if skin else SKIN
         self.glasses = glasses
+        self.shades = shades
 
     # ------------------------------------------------------------------
     def draw(self, ctx, x, y, s=1.0, expr="neutral", t=0.0, talk=False,
@@ -88,6 +90,13 @@ class Char2:
             if pose == "sit":
                 kx, ky = hx + 0.75 * r, hip + 0.05 * r
                 fx, fy = hx + 0.8 * r, -0.12 * r
+                ctx.move_to(hx, hip)
+                ctx.line_to(kx, ky)
+                ctx.line_to(fx, fy)
+            elif pose == "feetup":
+                # leaning back, feet up on the desk in front
+                kx, ky = hx + 0.85 * r, hip - 0.2 * r
+                fx, fy = hx + 1.55 * r, hip - 0.45 * r
                 ctx.move_to(hx, hip)
                 ctx.line_to(kx, ky)
                 ctx.line_to(fx, fy)
@@ -284,7 +293,7 @@ class Char2:
     def _hair(self, ctx, cx, cy, r, lw):
         h = self.hair
         col = self.hair_col
-        if h in ("bowl", "cap"):
+        if h in ("bowl", "cap", "side"):
             # puffy cap of hair with a jagged fringe
             ctx.move_to(cx - 1.04 * r, cy + 0.12 * r)
             ctx.curve_to(cx - 1.12 * r, cy - 0.85 * r, cx - 0.5 * r, cy - 1.06 * r, cx, cy - 1.05 * r)
@@ -309,6 +318,12 @@ class Char2:
                 ctx.arc(cx, cy - 0.12 * r, rr * r, a0 * PI, a1 * PI)
                 ctx.set_source_rgba(*_lighter(col, 0.4), 0.55)
                 ctx.set_line_width(0.07 * r)
+                ctx.stroke()
+            if h == "side":
+                ctx.move_to(cx - 0.3 * r, cy - 1.04 * r)
+                ctx.curve_to(cx - 0.35 * r, cy - 0.7 * r, cx - 0.45 * r, cy - 0.45 * r, cx - 0.55 * r, cy - 0.15 * r)
+                ctx.set_source_rgb(*OUT)
+                ctx.set_line_width(0.04 * r)
                 ctx.stroke()
             if h == "cap":
                 ctx.move_to(cx - 1.0 * r, cy - 0.35 * r)
@@ -396,7 +411,7 @@ def _face(ctx, cx, cy, r, lw, expr, t, talk, look, ch):
             oval(ex, ey, 0.066 * r, 0.112 * r)
             if expr == "angry":
                 brow(side, -0.02, tilt=-0.07)
-            elif expr in ("sad", "worried"):
+            elif expr in ("sad", "worried", "forced"):
                 brow(side, 0.02, tilt=0.07)
             else:
                 brow(side)
@@ -407,6 +422,12 @@ def _face(ctx, cx, cy, r, lw, expr, t, talk, look, ch):
             ctx.set_source_rgb(*OUT)
             ctx.set_line_width(0.035 * r)
             ctx.stroke()
+
+    if ch is not None and ch.shades:
+        for side in (-1, 1):
+            rrect(ctx, cx + side * ex0 + lx - 0.17 * r, ey - 0.12 * r, 0.34 * r, 0.22 * r, 0.08 * r)
+            fill_stroke(ctx, hexc("#1c1a24"), 0.035 * r)
+        line(cx - 0.06 * r + lx, ey - 0.05 * r, cx + 0.06 * r + lx, ey - 0.05 * r, 0.035 * r)
 
     my = cy + 0.56 * r + (0.05 * r if ch is not None and ch.mustache else 0)
     mx = cx + lx * 1.1
@@ -449,7 +470,7 @@ def _face(ctx, cx, cy, r, lw, expr, t, talk, look, ch):
         ctx.set_source_rgb(*OUT)
         ctx.set_line_width(0.045 * r)
         ctx.stroke()
-    elif mouth == "grin":
+    elif mouth in ("grin", "forced"):
         rrect(ctx, mx - 0.3 * r, my - 0.1 * r, 0.6 * r, 0.22 * r, 0.07 * r)
         fill_stroke(ctx, (1, 1, 1), 0.04 * r)
         for k in range(1, 6):
