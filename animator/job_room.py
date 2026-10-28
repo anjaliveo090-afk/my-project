@@ -75,6 +75,124 @@ def s_building(ctx, t, d):
         glow(ctx, x, 1470, 40, (1, 0.85, 0.5), 0.5)
 
 
+# ---------------------------------------------------------------- the plan (replaces s_building)
+EXEC_L = Char2("#4a3f5c", hair="bald", hair_col="#8a8a94", outfit="suit", tie="#2b45a6", mustache="#6d6d6d")
+EXEC_R = Char2("#3d5a4f", hair="bowl", hair_col="#2d2328", outfit="suit", tie="#e8a93a", glasses=True)
+
+
+def _bulb(ctx, x, y, k):
+    """Idea light bulb popping in (k = seconds since it appeared)."""
+    if k <= 0:
+        return
+    sc = pop(k)
+    glow(ctx, x, y, 110 * sc, (1, 0.92, 0.5), 0.6)
+    ctx.save()
+    ctx.translate(x, y)
+    ctx.scale(sc, sc)
+    ctx.new_sub_path()
+    ctx.arc(0, 0, 26, 0, 2 * math.pi)
+    ctx.set_source_rgb(*hexc("#ffe27a"))
+    ctx.fill_preserve()
+    ctx.set_source_rgb(*OUT)
+    ctx.set_line_width(4)
+    ctx.stroke()
+    ctx.rectangle(-12, 22, 24, 18)
+    ctx.set_source_rgb(*hexc("#b9bcc6"))
+    ctx.fill_preserve()
+    ctx.set_source_rgb(*OUT)
+    ctx.stroke()
+    for a in range(6):
+        ang = a * math.pi / 3 + 0.3
+        ctx.move_to(math.cos(ang) * 36, math.sin(ang) * 36)
+        ctx.line_to(math.cos(ang) * 50, math.sin(ang) * 50)
+    ctx.set_line_width(4)
+    ctx.stroke()
+    ctx.restore()
+
+
+def _marker(ctx, pts, k, col=OUT, w=6):
+    """Draw a marker stroke along pts, revealed by k (0..1)."""
+    if k <= 0:
+        return
+    total = sum(math.dist(a, b) for a, b in zip(pts, pts[1:]))
+    left = total * clamp(k)
+    ctx.move_to(*pts[0])
+    for a, b in zip(pts, pts[1:]):
+        seg = math.dist(a, b)
+        if left <= 0:
+            break
+        f = min(1, left / seg)
+        ctx.line_to(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f)
+        left -= seg
+    ctx.set_source_rgb(*col)
+    ctx.set_line_width(w)
+    ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+    ctx.set_line_join(cairo.LINE_JOIN_ROUND)
+    ctx.stroke()
+
+
+def s_plan(ctx, t, d):
+    """'but companies figured out a way to make something even worse happen':
+    three bosses at a meeting table get an idea and draw the plan on a whiteboard:
+    a tiny room with one person in it. The light turns sinister on 'even worse'."""
+    T = 2.74 + t
+    evil = ease((T - 4.8) / 0.35)
+    of.room(ctx, -400, 1100, 230, 980, wall="#9fb0e0", floor="#d9c2a3")
+    of.pendant(ctx, 360, 200, on=evil < 0.5)
+    # whiteboard with the plan
+    bx, by, bw, bh = 130, 360, 460, 320
+    ctx.rectangle(bx - 12, by - 12, bw + 24, bh + 24)
+    ctx.set_source_rgb(*hexc("#b9bcc6"))
+    ctx.fill_preserve()
+    ctx.set_source_rgb(*OUT)
+    ctx.set_line_width(4)
+    ctx.stroke()
+    ctx.rectangle(bx, by, bw, bh)
+    ctx.set_source_rgb(*hexc("#fbfbfd"))
+    ctx.fill()
+    text(ctx, "PLAN", bx + 70, by + 40, 30, hexc("#2b45a6"), outline=False)
+    k = (T - 4.15) / 0.65  # the plan is drawn on "to make something"
+    rx, ry, rw, rh = 290, 440, 150, 170
+    _marker(ctx, [(rx, ry), (rx + rw, ry), (rx + rw, ry + rh), (rx, ry + rh), (rx, ry)], k * 1.6)
+    _marker(ctx, [(rx + 20, ry + rh), (rx + 20, ry + 95), (rx + 60, ry + 95), (rx + 60, ry + rh)], k * 1.6 - 0.6, w=5)
+    if k > 0.55:  # the lonely person inside
+        px, py = rx + 105, ry + 120
+        ctx.new_sub_path()
+        ctx.arc(px, py - 32, 14, 0, 2 * math.pi)
+        ctx.set_source_rgb(*OUT)
+        ctx.set_line_width(5)
+        ctx.stroke()
+        _marker(ctx, [(px, py - 18), (px, py + 20)], (k - 0.55) * 4, w=5)
+        _marker(ctx, [(px - 14, py + 45), (px, py + 20), (px + 14, py + 45)], (k - 0.65) * 4, w=5)
+    _marker(ctx, [(170, 650), (240, 600), (282, 560)], k * 1.5 - 0.7, col=hexc("#2b45a6"), w=6)
+    _marker(ctx, [(262, 556), (282, 560), (276, 582)], k * 1.5 - 1.2, col=hexc("#2b45a6"), w=6)
+    if T > 4.86:  # "even worse": red circle around the room
+        c = clamp((T - 4.86) / 0.45)
+        ctx.new_sub_path()
+        ctx.arc(rx + rw / 2, ry + rh / 2, 125, -math.pi / 2, -math.pi / 2 + 2 * math.pi * c)
+        ctx.set_source_rgb(*hexc("#d63c3c"))
+        ctx.set_line_width(8)
+        ctx.stroke()
+    # three bosses behind the meeting table
+    for i, (ch, x) in enumerate(((EXEC_L, 150), (BOSS, 360), (EXEC_R, 570))):
+        expr = keyed(T, [(0, "sad" if ch is BOSS else "worried"), (3.38 + 0.08 * i, "shock"),
+                         (3.65 + 0.08 * i, "grin"), (4.86, "cold")])
+        arms = ("down", "up") if 3.4 < T < 4.1 and ch is BOSS else ("down", "down")
+        ch.draw(ctx, x, 1120, 1.0, expr, T + i, arms=arms, look=(-0.4 if 4.2 < T < 4.86 else 0.0), bob=0.5)
+        _bulb(ctx, x, 735, T - (3.38 + 0.08 * i) if T < 4.8 else 0)
+    of.desk(ctx, 360, 1030, 700, 1.2, top="#8a5a33", body="#6b4422", drawers=False)
+    for x in (150, 360, 570):
+        ctx.rectangle(x - 20, 1000, 40, 22)  # coffee cups
+        ctx.set_source_rgb(1, 1, 1)
+        ctx.fill_preserve()
+        ctx.set_source_rgb(*OUT)
+        ctx.set_line_width(3)
+        ctx.stroke()
+    tint(ctx, (0.25, 0.02, 0.1), 0.35 * evil)
+    if evil:
+        glow(ctx, 360, 1150, 520, (1, 0.25, 0.2), 0.3 * evil)
+
+
 # ---------------------------------------------------------------- open office
 OFFICE_DESKS = [0, 330, 660, 990, 1320]
 
@@ -393,11 +511,13 @@ SHOTS = [
         (0.05, 1.45, (360, 760)),                                   # "Getting fired"
         (0.75, 1.9, (380, 820), 0.5),                                # "in Japan" stamp over paper
         (1.9, 1.45, (360, 760), 0.35)]),                             # "impossible" shield, boss shocked
-    dict(start=2.74, draw=s_building, keys=[
-        (2.74, 1.0, (360, 1150)),                                    # "but companies"
-        (3.64, 1.0, (360, 520), 0.7),                                # "figured out a way" crane up
-        (4.86, 1.5, (452, 360), 0.6),                                # "something even worse"
-        (5.64, 3.4, (455, 345), 0.5)]),                              # "happen" into the dark window
+    dict(start=2.74, draw=s_plan, dof=2, keys=[
+        (2.74, 1.9, (360, 880)),                                     # "But" the boss, still blocked
+        (3.10, 1.05, (360, 800), 0.4),                               # "companies" three bosses
+        (3.81, 1.35, (360, 820), 0.45),                              # "figured out a way" light bulbs
+        (4.42, 1.6, (360, 530), 0.5),                                # "to make something" the plan
+        (5.14, 2.3, (365, 525), 0.45),                               # "even worse" red circle
+        (5.95, 4.6, (330, 560), 0.6)]),                              # "happen" into the drawn door
     dict(start=6.12, draw=office_at(6.12, "walk"), dof=2, keys=[
         (6.12, 1.1, (300, 860)),                                     # "Imagine"
         (7.06, 1.3, (420, 960), 0.6),                                # "your boss leads you"

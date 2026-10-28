@@ -972,7 +972,7 @@ def _dof(surf, focus, strength):
     surf.mark_dirty()
 
 
-def render(shots, total, out_path, xfade=0.22, grain=9, fade_out=0.6):
+def render(shots, total, out_path, xfade=0.22, grain=9, fade_out=0.6, frames=None):
     surf_a = cairo.ImageSurface(cairo.FORMAT_RGB24, W, H)
     surf_b = cairo.ImageSurface(cairo.FORMAT_RGB24, W, H)
     rs = np.random.default_rng(3)
@@ -982,7 +982,8 @@ def render(shots, total, out_path, xfade=0.22, grain=9, fade_out=0.6):
            "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p", str(out_path)]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     nframes = int(round(total * FPS))
-    for f in range(nframes):
+    # frames=(first, last) renders only that part, for patching a finished video
+    for f in range(*(frames or (0, nframes))):
         T = f / FPS
         i = max(k for k, s in enumerate(shots) if s["start"] <= T or k == 0)
         _draw_shot(shots[i], T - shots[i]["start"], surf_a, noise)
