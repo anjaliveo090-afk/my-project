@@ -185,12 +185,12 @@ class Char3:
             ctx.fill()
         ctx.restore()
         pat = ctx.pop_group()
-        rim = max(1.2, 0.035 * r)  # thin light "sticker" edge around the outline
-        for k in range(12):
-            a = k * PI / 6
+        rim = max(1.2, 0.035 * r)  # light rim only on the lit (left) side, like the reference
+        for deg in (150, 165, 180, 195, 210):
+            a = math.radians(deg)
             ctx.save()
             ctx.translate(math.cos(a) * rim, math.sin(a) * rim)
-            ctx.set_source_rgba(1, 0.99, 0.96, 0.9)
+            ctx.set_source_rgba(1, 0.99, 0.96, 0.85)
             ctx.mask(pat)
             ctx.restore()
         ctx.set_source(pat)
