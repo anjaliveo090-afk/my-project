@@ -171,6 +171,170 @@ def block_avatar(ctx, x, y, s, expr="shock", wave=False):
     hm.avatar(ctx, x, y, s, shirt="#2f6bd8", pants="#3fae4a", expr=expr, t=0.4, wave=wave)
 
 
+# ---------------------------------------------------------------- the two characters as blocky game avatars
+SKIN = ("#ffdd55", "#f2b630")
+INK = (0.1, 0.08, 0.12)
+
+
+def blocky(ctx, x, top_y, U, who, head_k=1.35, point=None, arms_up=2.75):
+    """Kid ('kid', shocked, arms up) or mom ('mom', smirking, pointing left, crown) as a blocky
+    game avatar. (x, top_y) = centre of the top of the head. Roblox-like proportions:
+    head 1.3U (drawn head_k bigger for a thumbnail), torso 2U x 2U, arms and legs 1U x 2U.
+    point = arm angle for mom's pointing arm (radians, pi/2 = straight left)."""
+    lw = 0.06 * U
+    hw, hh = 1.3 * U, 1.2 * U
+    hx, hy = x, top_y + hh * head_k / 2
+    t0 = top_y + hh * head_k - 0.05 * U           # torso top
+
+    def head_space():   # draw head parts scaled up about the head centre
+        ctx.save()
+        ctx.translate(hx, hy)
+        ctx.scale(head_k, head_k)
+        ctx.translate(-hx, -hy)
+    if who == "kid":
+        shirt, pants, arm_angles = ("#4fb3a9", "#2f8a82"), ("#2b45a6", "#1f3380"), (arms_up, -arms_up)
+    else:
+        shirt, pants = ("#9d7fd6", "#7a5cb8"), ("#3a3f55", "#262a3a")
+        arm_angles = (point if point is not None else math.pi / 2 + 0.05, -0.12)
+    # legs
+    for side in (-1, 1):
+        hm.box(ctx, x + (side - 1) * U / 2 + side * 0.02 * U, t0 + 2 * U - 0.05 * U, U, 2 * U, *pants,
+               r=0.15 * U, lw=lw)
+    # mom's long hair behind the head and shoulders
+    if who == "mom":
+        head_space()
+        hm.box(ctx, hx - hw / 2 - 0.22 * U, hy - hh / 2 - 0.05 * U, hw + 0.44 * U, hh + 0.95 * U,
+               "#8a4a20", "#5a2c10", r=0.35 * U, lw=lw / head_k)
+        ctx.restore()
+    # arms behind the torso edge
+    for side, ang in zip((-1, 1), arm_angles):
+        ctx.save()
+        ctx.translate(x + side * 1.5 * U, t0 + 0.45 * U)
+        ctx.rotate(ang)
+        hm.box(ctx, -U / 2, -0.45 * U, U, 2 * U, *SKIN, r=0.18 * U, lw=lw)     # yellow arm
+        hm.box(ctx, -U / 2, -0.45 * U, U, 0.75 * U, *shirt, r=0.18 * U, lw=lw)  # short sleeve
+        ctx.restore()
+    # torso
+    hm.box(ctx, x - U, t0, 2 * U, 2 * U, *shirt, r=0.15 * U, lw=lw)
+    if who == "kid":   # collar + buttons like the 2D kid
+        for side in (-1, 1):
+            ctx.move_to(x, t0 + 0.05 * U)
+            ctx.line_to(x + side * 0.38 * U, t0 + 0.05 * U)
+            ctx.line_to(x + side * 0.12 * U, t0 + 0.38 * U)
+            ctx.close_path()
+            hm._shade_fill(ctx, hexc("#8fe0d6"), hexc("#5cc0b4"), t0, t0 + 0.4 * U, lw * 0.8)
+        for k in range(3):
+            ctx.new_sub_path()
+            ctx.arc(x, t0 + (0.7 + k * 0.45) * U, 0.06 * U, 0, 2 * math.pi)
+            ctx.set_source_rgb(*hexc("#2f6b66"))
+            ctx.fill()
+    else:              # green apron like the 2D mom
+        hm.box(ctx, x - 0.62 * U, t0 + 0.35 * U, 1.24 * U, 1.75 * U, "#4caf50", "#2e7d32", r=0.12 * U, lw=lw)
+        hm.box(ctx, x - 0.35 * U, t0 + 1.0 * U, 0.7 * U, 0.45 * U, "#43a047", "#2e7d32", r=0.08 * U, lw=lw * 0.8)
+        for side in (-1, 1):
+            ctx.move_to(x + side * 0.5 * U, t0 + 0.4 * U)
+            ctx.line_to(x + side * 0.35 * U, t0)
+            ctx.set_source_rgb(*hexc("#2e7d32"))
+            ctx.set_line_width(0.12 * U)
+            ctx.stroke()
+    # neck + head
+    hm.box(ctx, hx - 0.3 * U, t0 - 0.2 * U, 0.6 * U, 0.3 * U, *SKIN, r=0.08 * U, lw=lw)
+    head_space()
+    lw = lw / head_k
+    hm.box(ctx, hx - hw / 2, hy - hh / 2, hw, hh, *SKIN, r=0.3 * U, lw=lw)
+    # hair cap (blocky, with a chunky fringe)
+    hc = ("#9a5a2a", "#6d381c") if who == "kid" else ("#8a4a20", "#5a2c10")
+    ctx.move_to(hx - hw / 2 - 0.08 * U, hy - 0.05 * U)
+    ctx.line_to(hx - hw / 2 - 0.08 * U, hy - hh / 2 - 0.02 * U)
+    ctx.curve_to(hx - hw / 2, hy - hh / 2 - 0.22 * U, hx + hw / 2, hy - hh / 2 - 0.22 * U,
+                 hx + hw / 2 + 0.08 * U, hy - hh / 2 - 0.02 * U)
+    ctx.line_to(hx + hw / 2 + 0.08 * U, hy - 0.05 * U)
+    n = 5
+    for k in range(n, 0, -1):   # zig-zag fringe
+        xa = hx - hw / 2 + hw * k / n
+        ctx.line_to(xa - hw / (2 * n), hy - 0.18 * U + (0.06 * U if k % 2 else 0))
+        ctx.line_to(xa - hw / n, hy - 0.3 * U)
+    ctx.close_path()
+    hm._shade_fill(ctx, hexc(hc[0]), hexc(hc[1]), hy - hh / 2 - 0.22 * U, hy, lw)
+    # face
+    ey = hy + 0.05 * U
+    if who == "kid":
+        for side in (-1, 1):
+            ex = hx + side * 0.28 * U
+            g = cairo.RadialGradient(ex + side * 0.12 * U, ey + 0.32 * U, 0, ex + side * 0.12 * U, ey + 0.32 * U, 0.2 * U)
+            g.add_color_stop_rgba(0, 1, 0.35, 0.35, 0.6)
+            g.add_color_stop_rgba(1, 1, 0.35, 0.35, 0)
+            ctx.set_source(g)
+            ctx.arc(ex + side * 0.12 * U, ey + 0.32 * U, 0.2 * U, 0, 2 * math.pi)
+            ctx.fill()
+            ellipse = hm.ellipse
+            ellipse(ctx, ex, ey, 0.17 * U, 0.21 * U)
+            ctx.set_source_rgb(1, 1, 1)
+            ctx.fill_preserve()
+            ctx.set_source_rgb(*INK)
+            ctx.set_line_width(lw)
+            ctx.stroke()
+            ctx.new_sub_path()
+            ctx.arc(ex, ey + 0.02 * U, 0.075 * U, 0, 2 * math.pi)
+            ctx.fill()
+            ctx.new_sub_path()
+            ctx.arc(ex - 0.025 * U, ey - 0.02 * U, 0.025 * U, 0, 2 * math.pi)
+            ctx.set_source_rgb(1, 1, 1)
+            ctx.fill()
+            ctx.move_to(ex - 0.15 * U, ey - 0.3 * U - side * 0.02 * U)   # raised, worried brows
+            ctx.line_to(ex + 0.13 * U, ey - 0.32 * U + side * 0.04 * U)
+            ctx.set_source_rgb(*INK)
+            ctx.set_line_width(0.07 * U)
+            ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+            ctx.stroke()
+        hm.ellipse(ctx, hx, hy + 0.36 * U, 0.12 * U, 0.15 * U)       # open "O" mouth
+        ctx.set_source_rgb(*hexc("#5a1a22"))
+        ctx.fill_preserve()
+        ctx.set_source_rgb(*INK)
+        ctx.set_line_width(lw * 0.8)
+        ctx.stroke()
+        for dx, dy, sc in ((0.85, -0.25, 1.0), (1.0, 0.15, 0.7)):        # sweat drops
+            cx, cy, d = hx + dx * U, hy + dy * U, 0.13 * U * sc
+            ctx.move_to(cx, cy - 2 * d)
+            ctx.curve_to(cx + d * 1.2, cy - 0.2 * d, cx + d, cy + d, cx, cy + d)
+            ctx.curve_to(cx - d, cy + d, cx - d * 1.2, cy - 0.2 * d, cx, cy - 2 * d)
+            ctx.set_source_rgb(*hexc("#7fd0ff"))
+            ctx.fill_preserve()
+            ctx.set_source_rgb(*INK)
+            ctx.set_line_width(lw * 0.7)
+            ctx.stroke()
+    else:
+        for side in (-1, 1):
+            ex = hx + side * 0.28 * U
+            hm.ellipse(ctx, ex, ey + 0.02 * U, 0.11 * U, 0.08 * U)    # half-lidded smug eyes
+            ctx.set_source_rgb(*INK)
+            ctx.fill()
+            ctx.move_to(ex - 0.15 * U, ey - 0.03 * U)
+            ctx.line_to(ex + 0.15 * U, ey - 0.03 * U)
+            ctx.set_line_width(0.06 * U)
+            ctx.stroke()
+            for k in range(3):   # eyelashes
+                ctx.move_to(ex + side * (0.08 + k * 0.03) * U, ey - 0.04 * U)
+                ctx.line_to(ex + side * (0.16 + k * 0.05) * U, ey - (0.14 - k * 0.02) * U)
+            ctx.set_line_width(0.035 * U)
+            ctx.stroke()
+            lift = 0.08 * U if side < 0 else 0.0                       # one brow raised
+            ctx.move_to(ex - 0.14 * U, ey - 0.2 * U - lift + side * 0.02 * U)
+            ctx.curve_to(ex - 0.05 * U, ey - 0.27 * U - lift, ex + 0.05 * U, ey - 0.27 * U - lift,
+                         ex + 0.14 * U, ey - 0.21 * U - lift)
+            ctx.set_line_width(0.06 * U)
+            ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+            ctx.stroke()
+        ctx.move_to(hx - 0.22 * U, hy + 0.33 * U)                    # smirk
+        ctx.curve_to(hx - 0.05 * U, hy + 0.42 * U, hx + 0.15 * U, hy + 0.38 * U, hx + 0.3 * U, hy + 0.24 * U)
+        ctx.set_source_rgb(*hexc("#b8233a"))
+        ctx.set_line_width(0.07 * U)
+        ctx.stroke()
+        hm.crown(ctx, hx, hy - hh / 2 - 0.08 * U, 0.012 * U)
+    ctx.restore()
+
+
+
 def offline_screen(ctx, x, y, s):
     hm.box(ctx, x - 150 * s, y - 100 * s, 300 * s, 200 * s, "#3a3f55", "#262a3a", r=16 * s, lw=6 * s)
     hm.box(ctx, x - 132 * s, y - 82 * s, 264 * s, 164 * s, "#101018", None, r=6 * s, lw=3 * s)
@@ -188,9 +352,8 @@ def vertical(out):
     big_text(ctx, "ROBLOX?!", 540, 410, size, "#ffe14a", tilt=-0.03)
     sticker(ctx, w, h, lambda c: offline_screen(c, 245, 680, 1.0), outline=10)
     sticker(ctx, w, h, lambda c: clock_sticker(c, 840, 640, 105), outline=12)
-    sticker(ctx, w, h, lambda c: block_avatar(c, 548, 1000, 2.2), outline=10)
-    sticker(ctx, w, h, lambda c: draw_mom(c, 790, 1880, 2.95), outline=16)
-    sticker(ctx, w, h, lambda c: draw_kid(c, 330, 2070, 3.55), outline=18)
+    sticker(ctx, w, h, lambda c: blocky(c, 805, 1000, 132, "mom", point=math.pi / 2 + 0.25), outline=16)
+    sticker(ctx, w, h, lambda c: blocky(c, 330, 960, 150, "kid", arms_up=2.9), outline=18)
     surf.write_to_png(str(out / f"thumb_short_1080x1920{SUFFIX}.png"))
 
 
@@ -201,10 +364,9 @@ def horizontal(out):
     burst(ctx, w, h, 640, 470)
     big_text(ctx, "MOM OWNS", 640, 110, 120, "#ffffff", tilt=-0.03)
     big_text(ctx, "ROBLOX?!", 640, 245, 150, "#ffe14a", tilt=-0.03)
-    sticker(ctx, w, h, lambda c: clock_sticker(c, 715, 455, 90), outline=10)
-    sticker(ctx, w, h, lambda c: block_avatar(c, 528, 790, 1.6), outline=8)
-    sticker(ctx, w, h, lambda c: draw_mom(c, 1050, 1000, 2.2), outline=12)
-    sticker(ctx, w, h, lambda c: draw_kid(c, 250, 1150, 2.6), outline=14)
+    sticker(ctx, w, h, lambda c: clock_sticker(c, 665, 440, 82), outline=10)
+    sticker(ctx, w, h, lambda c: blocky(c, 1075, 345, 100, "mom", point=math.pi / 2 + 0.3), outline=12)
+    sticker(ctx, w, h, lambda c: blocky(c, 290, 330, 112, "kid", arms_up=2.9), outline=14)
     surf.write_to_png(str(out / f"thumb_wide_1280x720{SUFFIX}.png"))
 
 
