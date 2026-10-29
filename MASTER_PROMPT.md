@@ -48,7 +48,7 @@ STEP 4 - DEFAULTS (my settings from the last video)
   and snap on key words.
 - NO captions (do not pass --srt to the assembler).
 - NO camera whoosh SFX: drop every whoosh.wav cue.
-- All other SFX at 10% of their cue volume; background music at --music-volume 0.2.
+- All other SFX at 10% of their cue volume (≈ -13 dB under the voice, as measured on the reference). Background music: animator/audio.py music_ref() at --music-volume 0.4 (≈ -20 dB under the voice, D minor, no drums). Read sound_design.md.
 - Synthesised SFX and music only (animator/audio.py), never copied from the reference channel.
 
 STEP 5 - CHECK BEFORE SENDING

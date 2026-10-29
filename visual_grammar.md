@@ -118,3 +118,32 @@ Rule used by the animator: a shot has `keys = [(word_time, zoom, (x, y)), ...]`.
 Example (the user's): "A mill owner | built | the clock tower | that lied | to the entire city | for ten years | nobody noticed" → owner close-up under the tower → he points up, camera cranes up the tower → clock → clock smirks, push in → drone pull back over the city → day/night time-lapse → camera comes down to the street where people walk past.
 
 Measured on that cut (`analysis/flow.py`): camera median 6.2 / mean 23.8 % width/s (reference 5.9-15.1 / 10.4-23.5).
+
+
+## 11. Lessons from 8 reference videos (frame logs at 4 fps, `analysis/frame_log.py`)
+Videos: Job, Window, Jar (first 3) + Button, Tree, Grave Bell, Upload Brain, Idea Zone (5 more).
+
+**Pace (measured with `analysis/new_visuals.py`, counts cuts AND soft dissolves):**
+- A new visual every **1.55-2.6 s** (median gap 1.2-1.75 s; 90% of gaps under 3-3.6 s). The fastest videos (Job, Jar, Bell) change every ~1.6 s.
+- Our animator target: a new framing every **1.2-1.8 s**, never a gap over ~3.5 s.
+- Camera speed (`flow.py`): median 4-15 % width/s across the 8. Non-camera motion (characters/objects) 3.6-8.6.
+- Hard cuts are rare. Almost every change is a **0.25 s cross-dissolve** or the camera itself travelling (tilt/crane/push) to the next subject.
+
+**More sentence → shot rules seen in the 5 new videos:**
+
+| # | When the sentence... | Show | Example |
+|---|---|---|---|
+| 14 | Explains what happens **inside** something (body, plant, brain, ground) | A **cutaway diagram** in the same cartoon style: X-ray skeleton, thermal lungs, skin cross-section with labels, leaf veins glowing, brain inside a see-through blue head, underground soil layers with the coffin | "milky sap" → leaf turns to glowing veins + label MILKY SAP; "scorches your lungs" → THERMAL lung view with temperature bar; "nature calls" → X-ray gut |
+| 15 | Gives a number / count / data | A **physical counter or diegetic UI**: mechanical tally counter 0046→0047, digital 1000 counter, satellite map "NIGHT 1 · 9:42 PM" + red SEVERE STORM badge, game HUD with score, "100%" on a form | "47 tiny scratches" → hand clicker with 0047; "a thousand times thinner" → counter rolling to 1000 |
+| 16 | Talks about "everyone / the whole town / people" | **Huge crowd** or drone pull-out to show scale, then back to one face | "the whole town is standing in an empty field" → aerial pull-back to a ring of people |
+| 17 | Says something is forbidden / a warning | A **big symbol mark** on the object: red X painted on the tree, sign, label, padlock | "big red X painted on its trunk" |
+| 18 | Describes ideas, memories, connections | **Corkboard** with pinned cards/photos and red string being drawn | "pattern of connections", "ideas that never connect" |
+| 19 | Time passes in one place | Same framing, **lighting changes**: day→night tint, sky glow getting brighter, sunrise through the window, snow | glow on the wall brighter every year; rocking chair from night to sunrise |
+| 20 | A thing is destroyed / goes wrong | Show the result **physically and literally**: palace becomes a smoking pile of rubble, the car paint peels, blisters grow, fire turns to black smoke | "can strip the paint off a car" |
+| 21 | A character feels a sensation (burning, cold, sick) | **Face close-up with a body-colour change + emoji effects**: face goes red with steam puffs, blue + shivering, eyes stream tears, sweat drops | "your mouth starts burning" |
+| 22 | Says "you" in a hypothetical ("If you...", "Imagine you're stranded") | The **"you" character** acts it out in the place (sits under the tree, falls asleep in the chair) and keeps the same look all video | Tree, Idea, Brain |
+| 23 | The last line | A **callback** to the first image (same place / object / counter: 0047→0048, the sand, the bell) and the character's final reaction to camera | all 8 |
+
+**Look & characters (all 8 share them):** one cartoon cast (round cream head, dot eyes, thick dark limbs) inside soft 3D-lit sets with depth of field, bloom from lamps/windows, light rays. Expressions snap on the key word; a face close-up (head filling 60-80% of frame) appears every ~10 s for emotional beats.
+
+**Sound:** see `sound_design.md` (SFX ~1 per second on visual events, music −20 dB, D minor, no drums).

@@ -152,6 +152,48 @@ def note(m):
     return 440 * 2 ** ((m - 69) / 12)
 
 
+def music_ref(total, swell_at=None):
+    """Background bed measured on the 3 references (sound_design.md): minor key (D minor),
+    ~96 bpm, soft mid-range plucks over a warm bass, ~2 notes/s, almost no drums,
+    a swell under the last line. Mix it ~21 dB under the voice."""
+    out = np.zeros(int(SR * (total + 3)))
+    beat = 60 / 96
+
+    def put(x, at):
+        s = int(at * SR)
+        e = min(len(out), s + len(x))
+        if s < len(out):
+            out[s:e] += x[:e - s]
+
+    prog = [(38, [62, 65, 69]), (34, [58, 62, 65]), (41, [60, 65, 69]), (33, [61, 64, 69])]  # Dm Bb F A
+    pattern = [0, 2, 1, 2, 0, 1, 2, 1]                                                       # 2 notes per beat
+    t, bar = 0.0, 0
+    while t < total:
+        root, tones = prog[bar % 4]
+        tb = tt(beat * 4.3)   # sustained warm bass (a pluck's fundamental dies within the bar)
+        b = (np.sin(2 * np.pi * note(root) * tb) * 0.07 + np.sin(2 * np.pi * note(root + 12) * tb) * 0.03) \
+            * np.exp(-tb * 0.25)
+        k = np.arange(len(b))
+        b *= np.minimum(1, k / (SR * 0.08)) * np.minimum(1, (len(b) - k) / (SR * 0.25))  # soft in, no click out
+        put(b, t)
+        for k, i in enumerate(pattern):
+            if (k + bar) % 3 == 2:          # leave gaps: sparse, not a wall of notes
+                continue
+            m = pluck(note(tones[i]), 0.9, 3, 5) * 0.33
+            put(m * np.minimum(1, (len(m) - np.arange(len(m))) / (SR * 0.1)), t + k * beat / 2)
+        t += beat * 4
+        bar += 1
+    if swell_at is not None:
+        n = int(SR * max(0.5, total - swell_at))
+        sw = sum(np.sin(2 * np.pi * note(m) * np.arange(n) / SR) for m in (50, 57, 62, 65)) * 0.12
+        put(sw * np.linspace(0, 1, n) ** 2, swell_at)
+    put(sum(pluck(note(m), 3.0, 3, 1.2) for m in (38, 50, 57, 62, 65)) * 0.5, total - 2.8)
+    out = out[:int(SR * total)]
+    n = int(SR * 1.2)
+    out[-n:] *= np.linspace(1, 0, n)
+    return out
+
+
 def music(total, sad_from, sad_to):
     out = np.zeros(int(SR * (total + 3)))
     bpm = 104
@@ -204,4 +246,5 @@ if __name__ == "__main__":
         save(out / f"{name}.wav", fn())
     total = float(sys.argv[2]) if len(sys.argv) > 2 else 60.0
     save(out / "music.wav", music(total, 40.9, 51.05))
+    save(out / "music_ref.wav", music_ref(total, swell_at=total - 4))
     print("wrote sfx + music to", out)
