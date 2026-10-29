@@ -1,71 +1,76 @@
-# Master prompt: new voice → same-style animated short
+# Master prompt: new voice + SRT → same-style animated short
 
-Copy everything inside the box into a new Claude Code chat on the repository
-`anjaliveo090-afk/my-project`, and attach your voiceover (mp3/wav), plus the script if you have it.
+Open a new Claude Code chat on the repository `anjaliveo090-afk/my-project` (from any device: claude.ai/code or the Claude app → Code).
+1. Attach your voiceover (mp3/wav) and the SRT.
+2. Paste the text inside the box below.
+3. Change the style line if you want the kings/medieval look.
 
 ```
-I am attaching a voiceover. Make a 9:16 animated short from it in exactly the same style
-as the clock-tower video in this repository.
+I am attaching a voiceover and its SRT. Make a 9:16 animated short from it in exactly
+the same style as my previous videos in this repository (latest example: the pachinko video).
 
 SETUP
-- Work on branch `claude/dazzling-hypatia-7p55ue` (all the tools live there; fetch and check it out first).
-- Read these before doing anything else, and follow them strictly:
-  CLAUDE.md, style_bible.md, visual_grammar.md (all sections, especially 2, 3, 8, 10),
-  animator/README.md, assembler/README.md. For the kings/medieval look also read
-  style_medieval.md and use animator/style3.py + animator/medieval.py.
-- Use animator/clock_tower2.py and animator/job_room.py as templates to copy (office sets and props are in animator/office.py). Do not change engine.py or style2.py
-  unless something is broken.
+- Work on branch `claude/dazzling-hypatia-7p55ue`: fetch it and check it out first.
+- Run `bash setup.sh` (installs packages, ffmpeg and the analysis model).
+- Read these first and follow them strictly:
+  CLAUDE.md, visual_grammar.md (all sections, especially 2, 10, 11), sound_design.md,
+  style_bible.md, animator/README.md, assembler/README.md.
+- Style: office/Japan look (style2.Char2 + office.py + arcade.py).
+  [For kings/medieval instead: read style_medieval.md, use style3.py + medieval.py, template spear_shield2.py.]
+- Template to copy: animator/gambling.py (newest: literal visual per phrase, ~31 shots,
+  SFX list at ~1 per second). Also see job_room.py and clock_tower2.py.
+  Do not change engine.py / style2.py / style3.py unless something is broken.
 
 STEP 1 - WORDS
-- Get word-level timings with `python3 analysis/align_words.py <voice> <script.txt|subs.srt> output/<story_name>`
-  (pocketsphinx offline; Hugging Face downloads are blocked here). If I gave a script, align it to
-  the voice. If not, transcribe and show me the cleaned script so I can correct words.
-- Save script.txt, aligned.json and captions.srt in output/<story_name>/.
+- Strip any "(Transcribed by ...)" text from the SRT.
+- Run `python3 analysis/align_words.py <voice> <subs.srt> output/<story_name>` for word timings.
 
-STEP 2 - VISUAL PLAN (show it to me before rendering)
+STEP 2 - VISUAL PLAN
 - Split the narration into phrases of 2-4 words.
-- Tag each sentence with a rule number from visual_grammar.md section 2, and plan a table:
-  time | phrase | what is on screen | camera move (crane/drone up, pull back, push in,
-  pan/tilt following an object, track with a character, insert close-up) | character +
-  expression | lighting/mood.
-- The camera must ARRIVE on the word it illustrates (example: "A mill owner" = the owner;
-  "built" = camera cranes up the tower; "the clock tower" = the clock).
-- Dissolve only when the location changes; the camera keeps moving through it.
+- Tag each phrase with a rule from visual_grammar.md section 2 / 11.
+- Show what is SAID, literally (an object for each noun, a counter for numbers, a diagram for
+  explanations, a big X for "not / no", a face close-up for reactions).
+- Aim for a new visual every ~1.5 s; the camera arrives on the key word.
+- Keep the main subject between y 250 and 820 (clear of captions and the Subscribe button).
 
-STEP 3 - BUILD
-- Create animator/<story_name>.py from clock_tower2.py: new worlds (scenes), Char2
-  characters in the user's reference style (thick dark limbs, dark ball hands, big dark
-  shoes, tall oval eyes, thick brows, smooth fringe with highlights, collared clothes, soft
-  shading), keyframed camera `keys` on word times, dof on character shots, over-the-shoulder
-  (back_figure) and dutch angles where they fit.
-- Composition: the main subject (face or key object) must stay between y 250 and 820 of
-  720x1280, never in the bottom area where Shorts captions and the Subscribe button sit.
-- Lighting by mood from visual_grammar.md section 5 (warm = happy, deep blue + one lamp =
-  menace/explanation, cool desaturated = loss, neon = night city, golden = history).
+STEP 3 - BUILD AND CHECK FRAMES
+- Write animator/<story_name>.py (plus a new set module if new places are needed).
+- Before the full render, draw one frame per shot into a contact sheet and look at it.
+  Fix anything small, cut off, hidden or too dark.
 
-STEP 4 - DEFAULTS (my settings from the last video)
-- NO lip-sync: render with --no-lipsync; characters hold expressions that fit the moment
-  and snap on key words.
-- NO captions (do not pass --srt to the assembler).
-- NO camera whoosh SFX: drop every whoosh.wav cue.
-- All other SFX at 10% of their cue volume (≈ -13 dB under the voice, as measured on the reference). Background music: animator/audio.py music_ref() at --music-volume 0.4 (≈ -20 dB under the voice, D minor, no drums). Read sound_design.md.
-- Synthesised SFX and music only (animator/audio.py), never copied from the reference channel.
+STEP 4 - MY DEFAULTS
+- No lip-sync, no captions, no camera whoosh.
+- SFX cues scaled to 10%.
+- Music: audio.music_ref() at --music-volume 0.4.
+- Synthesised SFX and music only (animator/audio.py).
 
-STEP 5 - CHECK BEFORE SENDING
-- Render a contact sheet of a frame at every camera key and look at it: subject centred,
-  nothing important cut off or outside the scene, no empty/black areas.
-- Run analysis/flow.py on the caption-free animation: camera median should be about 6-15
-  and mean about 10-24 (% width per second), like the reference.
-- Then render, assemble, and send me the final mp4. Commit and push the code
-  (output/ is git-ignored).
+STEP 5 - MEASURE, THEN SEND
+- analysis/new_visuals.py: a new visual every 1.5-2.6 s.
+- analysis/flow.py on the animation: camera median of 4 or more.
+- analysis/audio_ref.py on the final mp4:
 
-Tell me honestly what could not match the reference (it is 2D code animation, not a 3D
-AI render).
+  | Measure | Target |
+  |---|---|
+  | Music vs voice | -20 ± 2 dB |
+  | SFX per 10 s | 7-12 |
+  | SFX median vs voice | -11 to -15 dB |
+  | SFX on cuts | under 15% |
+
+- Send me the final mp4, and commit and push the code (output/ is git-ignored).
+- Tell me honestly what could not match the reference.
+- For fixes later: patch only the needed shots, never regenerate everything.
 ```
 
 ## Notes
-- The new chat only works on this branch: everything (engine, characters, rules) is on
-  `claude/dazzling-hypatia-7p55ue` and not merged into the default branch.
-- The reference videos are not needed again: their analysis is saved in `style_bible.md`
-  and `visual_grammar.md`.
-- A 60 s video takes a while: new scenes have to be drawn for every new story.
+- Everything (engine, characters, sets, rules, measured sound targets) lives on the branch
+  `claude/dazzling-hypatia-7p55ue`. If it is merged into the default branch, the "check out
+  the branch" line is no longer needed.
+- The reference videos are not needed again. Their analysis is saved in:
+  - `style_bible.md`
+  - `visual_grammar.md`
+  - `sound_design.md`
+  - `analysis/ref_data/`
+- To skip `setup.sh` in every new chat, paste `bash setup.sh` into the cloud environment's
+  **Setup script** (session title bar → environment menu → Edit).
+- A ~55 s video takes about 20-40 minutes in total: planning, drawing new scenes, a ~3-6 min
+  render, then checks.
