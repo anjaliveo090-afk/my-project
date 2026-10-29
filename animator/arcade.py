@@ -12,9 +12,14 @@ LW = 4.0
 NEON = ["#ff4f8b", "#ffd84a", "#4fe3ff", "#9b6bff", "#5dff8a"]
 
 
+def _col(c):
+    return c if isinstance(c, tuple) else hexc(c)
+
+
 def box(ctx, x, y, w, h, top, bottom=None, r=6, lw=LW):
+    """Outlined rounded box with a top-lit gradient; colours as hex strings or rgb tuples."""
     rrect(ctx, x, y, w, h, r)
-    _shade_fill(ctx, hexc(top), hexc(bottom or top), y, y + h, lw)
+    _shade_fill(ctx, _col(top), _col(bottom if bottom is not None else top), y, y + h, lw)
 
 
 def night_sky(ctx, y0=-1500, y1=1400):
