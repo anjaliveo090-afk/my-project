@@ -147,3 +147,6 @@ Videos: Job, Window, Jar (first 3) + Button, Tree, Grave Bell, Upload Brain, Ide
 **Look & characters (all 8 share them):** one cartoon cast (round cream head, dot eyes, thick dark limbs) inside soft 3D-lit sets with depth of field, bloom from lamps/windows, light rays. Expressions snap on the key word; a face close-up (head filling 60-80% of frame) appears every ~10 s for emotional beats.
 
 **Sound:** see `sound_design.md` (SFX ~1 per second on visual events, music −20 dB, D minor, no drums).
+
+| 24 | Counts seconds / steps down ("Second 10... Second 9...") | An **on-screen timer HUD** (screen-space overlay) that ticks at every spoken number, plus a big "SECOND N" label; shots with a HUD set `top=250` so safezone.fit keeps characters and labels below it | speedrun.py `make_hud`, `HUD` list |
+| 25 | Last line asks to replay ("comment loop") | A loop-arrow + comment bubble, then **return to the first frame** (same scene as shot 1, fade_out=0) so the Short loops | speedrun.py `s_loop`, `s_end` |

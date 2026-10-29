@@ -375,6 +375,8 @@ def coin_rain(ctx, T, n=18, seed=2, y0=-300, y1=1400):
 
 
 def like_button(ctx, x, y, s=1.0, pressed=0.0):
+    if s <= 0.02:
+        return
     col = lerpc(hexc("#e9edf2"), hexc("#4f8bff"), pressed)
     box(ctx, x - 120 * s, y - 60 * s, 240 * s, 120 * s, col, lerpc(col, (0, 0, 0), 0.15), r=60 * s)
     # thumbs up
@@ -396,6 +398,8 @@ def like_button(ctx, x, y, s=1.0, pressed=0.0):
 
 
 def subscribe_button(ctx, x, y, s=1.0, pressed=0.0):
+    if s <= 0.02:
+        return
     col = lerpc(hexc("#e8323a"), hexc("#8a8f9a"), pressed)
     box(ctx, x - 190 * s, y - 55 * s, 380 * s, 110 * s, col, lerpc(col, (0, 0, 0), 0.2), r=20 * s)
     text(ctx, "SUBSCRIBED" if pressed > 0.5 else "SUBSCRIBE", x, y, 42 * s, (1, 1, 1), outline=False)

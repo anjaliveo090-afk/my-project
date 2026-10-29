@@ -9,6 +9,7 @@ fit(SHOTS, story_module) draws each keyframed shot, records where the story's ch
 and nudges / zooms out each camera key so that its framing stays inside the zone.
 Only the camera changes: story, timing, sets and SFX stay the same.
 Props that must stay visible too can be listed per shot as keep=[(x0, y0, x1, y1), ...] (world coords).
+Shots with a screen-space HUD at the top can set top=250 so characters and labels stay below it.
 Run it right before render(): `safezone.fit(SHOTS, sys.modules[__name__])`."""
 import math
 import sys
@@ -113,21 +114,22 @@ def _bbox_at(shot, T, surf):
     return (min(b[0] for b in vis), min(b[1] for b in vis), max(b[2] for b in vis), max(b[3] for b in vis))
 
 
-def _solve(box):
-    """Zoom factor f (about the screen centre) and screen shift (sx, sy) that put box in the zone."""
+def _solve(box, y0=Y0):
+    """Zoom factor f (about the screen centre) and screen shift (sx, sy) that put box in the zone
+    (top edge y0: raise it above 149 when a HUD/timer overlay sits at the top)."""
     l, t, r, b = box
-    f = min(1.0, (Y1 - Y0 - 2 * MARGIN) / max(1.0, b - t))
+    f = min(1.0, (Y1 - y0 - 2 * MARGIN) / max(1.0, b - t))
     l, t, r, b = [(v - c) * f + c for v, c in ((l, W / 2), (t, H / 2), (r, W / 2), (b, H / 2))]
     sy = 0.0
     if b > Y1 - MARGIN:
         sy = Y1 - MARGIN - b
-    elif t < Y0 + MARGIN:
-        sy = Y0 + MARGIN - t
+    elif t < y0 + MARGIN:
+        sy = y0 + MARGIN - t
     right = NOTCH_X if b + sy > NOTCH_Y else X1
     if r - l > right - X0 - 2 * MARGIN:   # too wide: zoom out more and solve again
         f2 = (right - X0 - 2 * MARGIN) / (r - l)
         f3, sx, sy = _solve(tuple((v - c) * f2 + c for v, c in
-                                  ((l, W / 2), (t - sy, H / 2), (r, W / 2), (b - sy, H / 2))))
+                                  ((l, W / 2), (t - sy, H / 2), (r, W / 2), (b - sy, H / 2))), y0)
         return f * f2 * f3, sx, sy
     sx = 0.0
     if r > right - MARGIN:
@@ -172,7 +174,7 @@ def fit(shots, module, fps=5, iters=4, verbose=True):
                                                            max(worst[2], box[2]), max(worst[3], box[3]))
                     if worst is None:
                         continue
-                    f, sx, sy = _solve(worst)
+                    f, sx, sy = _solve(worst, shot.get("top", Y0))
                     if f > 0.995 and abs(sx) < 3 and abs(sy) < 3:
                         continue
                     z = k[1] * f
