@@ -150,10 +150,10 @@ def s_noexcuse(ctx, t, d):
     T = 7.89 + t
     hm.bedroom(ctx, T, night=0.5)
     mom(ctx, 400, 1420, 1.7, "angry", T, arms=("down", "wag"))
-    bubble(ctx, 210, 420, 300, 130, 120, 620, pop(T - 7.9))
+    bubble(ctx, 200, 760, 300, 130, 300, 930, pop(T - 7.9))
     if T > 7.9:
-        text(ctx, "5 MORE MIN!", 210, 420, 32, OUT, outline=False, scale=pop(T - 7.9))
-    red_x(ctx, 210, 420, 110, (T - 8.16) / 0.25)
+        text(ctx, "5 MORE MIN!", 200, 760, 32, OUT, outline=False, scale=pop(T - 7.9))
+    red_x(ctx, 200, 760, 110, (T - 8.16) / 0.25)
 
 
 # ---------------------------------------------------------------- 8.95 "Go to sleep."
@@ -256,7 +256,7 @@ def s_math(ctx, t, d):
             hm.box(ctx, 150, -180 + i * 130, 70, 60, "#ffffff", "#eef1f7", r=6, lw=3)
         ctx.restore()
     if T > 15.63:
-        hm.avatar(ctx, 600, 1180, 0.9, shirt="#e8574a", hair="curly", expr="sad", t=T)
+        hm.avatar(ctx, 520, 1080, 0.8, shirt="#e8574a", hair="curly", expr="sad", t=T)
 
 
 # ---------------------------------------------------------------- 16.84 "Are you kidding me?"
@@ -295,7 +295,7 @@ def s_like(ctx, t, d):
         ctx.set_line_width(6)
         ctx.stroke()
     if T > 19.69:
-        hm.like_button(ctx, 470, 470, 1.1 * pop(T - 19.69), pressed=clamp((T - 19.9) / 0.15))
+        hm.like_button(ctx, 470, 720, 1.1 * pop(T - 19.69), pressed=clamp((T - 19.9) / 0.15))
 
 
 # ---------------------------------------------------------------- 20.03 "and subscribe to this video"
@@ -428,7 +428,7 @@ def s_enter(ctx, t, d):
         glow(ctx, 360, 900, 220, (1, 0.95, 0.7), 0.6 * (1 - k))
         hm.avatar(ctx, 360, lerp(200, 1080, k), 1.0, shirt="#9d7fd6", pants="#3a3f55", hair="bun", mom=True,
                   expr="grin", t=T)
-        hm.chat_banner(ctx, 360, 260, "MOM has joined the game", 1.0 * pop(T - 31.3))
+        hm.chat_banner(ctx, 360, 520, "MOM has joined the game", 0.9 * pop(T - 31.3))
     if T > 31.54:
         label(ctx, "BACON", 180, 820, 30, hexc("#e8574a"), scale=pop(T - 31.54), tilt=0)
 
@@ -455,7 +455,7 @@ def s_sweetie(ctx, t, d):
     friends_row(ctx, T, expr="shock")
     hm.avatar(ctx, 160, 1080, 1.0, shirt="#9d7fd6", pants="#3a3f55", hair="bun", mom=True, expr="grin", t=T,
               wave=True)
-    size = lerp(44, 110, ease((T - 35.07) / 0.6)) if T > 35.07 else 44
+    size = lerp(44, 90, ease((T - 35.07) / 0.6)) if T > 35.07 else 44
     sc = pop(T - 33.95)
     if sc > 0:
         text(ctx, "HELLO", 360, 420, size, hexc("#ff4f8b"), outline=True, scale=sc)
@@ -482,12 +482,12 @@ def s_refuse(ctx, t, d):
     sc = pop(T - 39.4)
     if sc > 0:
         ctx.save()
-        ctx.translate(520, 620)
+        ctx.translate(500, 700)
         ctx.scale(sc * 0.75, sc * 0.75)
         hm.dialog(ctx, 0, 0, "LOG OFF?", pick=1 if T > 39.97 else None)
         ctx.restore()
         if T > 39.97:
-            hm.cursor(ctx, 590, 640, 0.9, click=1.0 if T < 40.15 else 0.0)
+            hm.cursor(ctx, 570, 720, 0.9, click=1.0 if T < 40.15 else 0.0)
 
 
 # ---------------------------------------------------------------- 41.28 "so she disconnects the Wi-Fi"
@@ -497,9 +497,9 @@ def s_unplug(ctx, t, d):
     hm.box(ctx, 160, 760, 400, 30, "#b07a4a", "#8a5a33", r=4)   # shelf
     pull = ease((T - 41.59) / 0.35)
     hm.router(ctx, 340, 700, 1.0, T, on=1.0 if T < 41.75 else 0.0, plug_out=pull)
-    mom(ctx, 600, 1250, 1.1, keyed(T, [(0, "smirk"), (41.59, "cold")]), T, arms=("down", "point"))
+    mom(ctx, 590, 1000, 1.05, keyed(T, [(0, "smirk"), (41.59, "cold")]), T, arms=("down", "point"))
     if T > 42.22:
-        hm.wifi_icon(ctx, 360, 330, 1.0, crossed=(T - 42.22) / 0.3)
+        hm.wifi_icon(ctx, 340, 470, 0.9, crossed=(T - 42.22) / 0.3)
 
 
 # ---------------------------------------------------------------- 42.68 "for the entire server."
@@ -593,17 +593,18 @@ shot(3.11, s_servers, push(3.11, 4.83, 1.25, 0.95, (360, 560), (360, 640)), shak
 shot(4.83, s_clock, push(4.83, 6.27, 1.0, 1.35, (360, 680), (360, 720)))
 shot(6.27, s_why, push(6.27, 6.76, 1.15, 1.35, (300, 780), (270, 740)), shake=(0.03, 6))
 shot(6.76, s_bedtime, [(6.76, 0.95, (380, 760)), (7.21, 1.05, (360, 720), 0.35)])
-shot(7.89, s_noexcuse, push(7.89, 8.95, 1.0, 1.1, (340, 800), (320, 820)), dof=2, shake=(0.27, 7))
+shot(7.89, s_noexcuse, push(7.89, 8.95, 1.0, 1.1, (340, 800), (320, 820)), dof=2, shake=(0.27, 7),
+     keep=[(40, 680, 360, 840)])
 shot(8.95, s_sleep, push(8.95, 9.74, 1.1, 1.35, (360, 820), (320, 820)))
 shot(9.74, day_shot(2, 9.74, 9.94), push(9.74, 10.56, 1.0, 1.2, C, (360, 620)))
 shot(10.56, s_obby, [(10.56, 0.9, (380, 780)), (11.44, 1.1, (480, 680), 0.4)])
 shot(11.79, s_assignment, [(11.79, 1.1, (420, 760)), (12.14, 1.0, (360, 560), 0.35)])
 shot(13.07, s_waitwhat, push(13.07, 13.92, 1.2, 1.5, (330, 800), (270, 760)), shake=(0.39, 8))
 shot(13.92, s_nojump, [(13.92, 1.0, (360, 820)), (14.49, 1.25, (330, 760), 0.35), (14.83, 1.3, (380, 640), 0.3)])
-shot(15.09, s_math, push(15.09, 16.84, 1.05, 1.2, C, (360, 600)))
+shot(15.09, s_math, push(15.09, 16.84, 1.05, 1.2, C, (360, 600)), keep=[(110, 310, 610, 970)])
 shot(16.84, s_kidding, push(16.84, 17.81, 1.15, 1.4, (330, 800), (300, 700)), shake=(0.1, 9))
 shot(17.81, day_shot(3, 17.81, 18.18), push(17.81, 18.67, 1.0, 1.2, C, (360, 620)))
-shot(18.67, s_like, [(18.67, 1.0, (330, 780)), (19.69, 1.2, (440, 560), 0.4)])
+shot(18.67, s_like, [(18.67, 1.0, (330, 780)), (19.69, 1.2, (440, 760), 0.4)], keep=[(330, 650, 610, 790)])
 shot(20.03, s_subscribe, push(20.03, 21.31, 1.0, 1.25, (360, 600), (360, 620)))
 shot(21.31, s_count, push(21.31, 22.39, 1.0, 1.3, C, C), shake=(0.42, 6))
 shot(22.39, s_free, push(22.39, 23.3, 1.0, 1.25, (360, 700), (360, 520)))
@@ -615,17 +616,20 @@ shot(28.92, s_unfair, push(28.92, 30.18, 1.1, 1.25, (360, 920), (360, 900)), sha
 shot(30.18, day_shot(5, 30.18, 30.53), push(30.18, 31.01, 1.0, 1.2, C, (360, 620)))
 shot(31.01, s_enter, [(31.01, 1.0, (330, 820)), (31.22, 1.05, (340, 700), 0.3), (31.87, 1.2, (300, 820), 0.4)])
 shot(32.43, s_greet, push(32.43, 33.94, 1.1, 1.3, (360, 860), (420, 820)))
-shot(33.94, s_sweetie, [(33.94, 1.0, (360, 620)), (35.07, 0.9, (360, 640), 0.5)], shake=(1.13, 8))
+shot(33.94, s_sweetie, [(33.94, 1.0, (360, 620)), (35.07, 0.9, (360, 640), 0.5)], shake=(1.13, 8),
+     keep=[(20, 360, 700, 600)])
 shot(36.38, s_embarrass, push(36.38, 38.14, 1.15, 1.35, (330, 760), (300, 700)))
 shot(38.14, day_shot(6, 38.14, 38.51), push(38.14, 38.8, 1.0, 1.2, C, (360, 620)))
-shot(38.80, s_refuse, [(38.80, 1.0, (380, 760)), (39.4, 1.25, (480, 640), 0.35), (40.34, 1.2, (330, 800), 0.4)])
-shot(41.28, s_unplug, [(41.28, 1.0, (420, 760)), (41.59, 1.35, (420, 800), 0.3), (42.22, 1.15, (380, 560), 0.3)],
-     shake=(0.35, 7))
+shot(38.80, s_refuse, [(38.80, 1.0, (380, 760)), (39.4, 1.25, (480, 760), 0.35), (40.34, 1.2, (330, 800), 0.4)],
+     keep=[(330, 610, 680, 790)])
+shot(41.28, s_unplug, [(41.28, 1.0, (420, 760)), (41.59, 1.35, (420, 800), 0.3), (42.22, 1.15, (380, 760), 0.3)],
+     shake=(0.35, 7), keep=[(190, 360, 560, 780)])
 shot(42.68, s_allserver, push(42.68, 44.18, 1.2, 0.95, (360, 640), (360, 640)))
 shot(44.18, day_shot(7, 44.18, 44.63), push(44.18, 45.11, 1.0, 1.25, C, (360, 620)))
-shot(45.11, s_release, [(45.11, 1.0, (420, 760)), (45.72, 1.15, (360, 600), 0.5), (46.92, 1.1, (400, 600), 0.4)])
+shot(45.11, s_release, [(45.11, 1.0, (420, 760)), (45.72, 1.15, (360, 600), 0.5), (46.92, 1.1, (400, 600), 0.4)],
+     keep=[(190, 220, 530, 800)])
 shot(47.80, s_guess, push(47.80, 48.96, 1.15, 1.4, (330, 780), (280, 720)))
-shot(48.96, s_title, push(48.96, TOTAL, 1.25, 1.0, (360, 520), (360, 700)))
+shot(48.96, s_title, push(48.96, TOTAL, 1.25, 1.0, (360, 520), (360, 700)), keep=[(60, 330, 660, 1190)])
 SHOTS = S
 for k, s in enumerate(SHOTS):
     s["end"] = SHOTS[k + 1]["start"] if k + 1 < len(SHOTS) else TOTAL
@@ -672,4 +676,6 @@ if __name__ == "__main__":
     kw = {}
     if len(sys.argv) > 4:
         kw["frames"] = (int(sys.argv[3]), int(sys.argv[4]))
+    import safezone
+    safezone.fit(SHOTS, sys.modules[__name__])   # characters + key props inside the Shorts safe zone
     render(SHOTS, TOTAL, sys.argv[1], grain=4, xfade=0.2, **kw)

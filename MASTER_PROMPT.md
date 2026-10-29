@@ -17,7 +17,7 @@ SETUP
   style_bible.md, animator/README.md, assembler/README.md.
 - Style: office/Japan look (style2.Char2 + office.py + arcade.py).
   [For kings/medieval instead: read style_medieval.md, use style3.py + medieval.py, template spear_shield2.py.]
-- Template to copy: animator/gambling.py (newest: literal visual per phrase, ~31 shots,
+- Template to copy: animator/mom_owner.py (newest, with safezone.fit) or animator/gambling.py (newest: literal visual per phrase, ~31 shots,
   SFX list at ~1 per second). Also see job_room.py and clock_tower2.py.
   Do not change engine.py / style2.py / style3.py unless something is broken.
 
@@ -31,7 +31,8 @@ STEP 2 - VISUAL PLAN
 - Show what is SAID, literally (an object for each noun, a counter for numbers, a diagram for
   explanations, a big X for "not / no", a face close-up for reactions).
 - Aim for a new visual every ~1.5 s; the camera arrives on the key word.
-- Keep the main subject between y 250 and 820 (clear of captions and the Subscribe button).
+- Safe zone: the WHOLE character and key props inside x 38-680, y 149-1013 (below y 678 only up to x 599).
+  Call safezone.fit(SHOTS, sys.modules[__name__]) right before render() (animator/safezone.py).
 
 STEP 3 - BUILD AND CHECK FRAMES
 - Write animator/<story_name>.py (plus a new set module if new places are needed).

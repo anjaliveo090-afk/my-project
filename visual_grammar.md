@@ -43,7 +43,7 @@ The camera never sits still. A shot with no move is a deliberate pause.
 | 13 | Ends the story | **Return to an earlier location or symbol** | Pull-out or push to a sign | Small, alone | CAREER DEVELOPMENT ROOM door; police with clipboard |
 
 ## 3. Composition
-- **Safe zones for Shorts (720x1280):** keep the main subject (face or key object) between **y 250 and 820**, ideally centred around y 640. Captions sit at about y 860-940, and the YouTube Subscribe button, title and channel name cover roughly y 1040-1280. Feet and ground can go there; faces and key props must not.
+- **Safe zone for Shorts (720x1280), from the user's template:** the WHOLE character (head to feet) and key props/labels stay inside x 38-680, y 149-1013; below y 678 the right edge is x 599 (like/comment buttons). Captions are added under y ~1013. Enforced automatically by `animator/safezone.py`: call `safezone.fit(SHOTS, sys.modules[__name__])` right before `render()`; list key props per shot as `keep=[(x0, y0, x1, y1)]` (world coords). Check with `safezone.overlay()` on frames.
 - In the animator, give every shot a `focus` at the subject's face: push-ins end with it centred, pull-outs end with it at 45% height.
 - Subject sits in the middle or lower-middle third, leaving the caption zone (about 70% down) readable.
 - **Foreground framing** for depth: a shoulder, a head, a cat or a desk edge cut off at the frame edge and slightly blurred.

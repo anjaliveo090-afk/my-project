@@ -14,6 +14,8 @@ Without Flow: `animator/` draws the whole video in code (`clock_tower2.py` is th
 
 Second style (kings / medieval / war look): read `style_medieval.md` and use `animator/style3.py` + `animator/medieval.py` instead of style2/office.
 
+Safe zone (animator, every video): the whole character must sit inside x 38-680, y 149-1013 (below y 678 only up to x 599). Call `safezone.fit(SHOTS, sys.modules[__name__])` right before `render()` (see `animator/safezone.py`, template `mom_owner.py`), add `keep=[...]` boxes for key props, and look at a contact sheet with the zone drawn.
+
 Sound defaults (animator): music `audio.music_ref()` mixed with `--music-volume 0.4`, SFX cues scaled to 10%, no whoosh; check with `analysis/audio_ref.py final.mp4 srt out` against `sound_design.md` section 3. Pace check: `analysis/new_visuals.py` (reference: a new visual every 1.5-2.6 s) and `analysis/flow.py`.
 
 New reference videos: run `analysis/frame_log.py` (4 fps sheets with subtitles), `analysis/audio_ref.py` (SFX + music, needs the UVR model in `analysis/models/`, see `sound_design.md`) and `analysis/new_visuals.py`, then add what you learn to `visual_grammar.md` section 11 and `sound_design.md`.
