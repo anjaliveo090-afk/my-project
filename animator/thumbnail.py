@@ -2,7 +2,7 @@
 characters: 1080x1920 (Shorts) and 1280x720 (search / suggested).
 Recipe: one huge emotional face, a clear antagonist, 2-3 word text, bright warm burst
 behind, white sticker outlines so everything pops, nothing important at the edges.
-Usage: python3 thumbnail.py out_dir"""
+Usage: python3 thumbnail.py out_dir [--no-stroke]"""
 import math
 import sys
 from pathlib import Path
@@ -17,6 +17,7 @@ from engine import hexc
 from mom_owner import KID, mom
 
 FONT = "Inter Display Black"
+SUFFIX = ""
 
 
 def surface(w, h):
@@ -40,6 +41,9 @@ def burst(ctx, w, h, cx, cy):
     ctx.fill()
 
 
+STROKE = True   # white sticker outline around characters/props (False = no outline, only a soft shadow)
+
+
 def sticker(dst_ctx, w, h, draw, outline=14, shadow=(10, 14)):
     """Draw `draw(ctx)` on its own layer, add a white outline + soft shadow, composite."""
     lay = surface(w, h)
@@ -47,6 +51,8 @@ def sticker(dst_ctx, w, h, draw, outline=14, shadow=(10, 14)):
     lay.flush()
     a = np.ndarray((h, w, 4), np.uint8, lay.get_data())
     alpha = a[:, :, 3]
+    if not STROKE:
+        outline = 0
     k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * outline + 1, 2 * outline + 1))
     ring = cv2.dilate(alpha, k)
     sh = cv2.GaussianBlur(ring, (0, 0), 10)
@@ -58,9 +64,10 @@ def sticker(dst_ctx, w, h, draw, outline=14, shadow=(10, 14)):
     wa = np.ndarray((h, w, 4), np.uint8, ws.get_data())
     wa[:] = base
     white = ring.astype(np.float32) / 255
-    for c in range(3):
-        wa[:, :, c] = np.clip(wa[:, :, c] * (1 - white) + 255 * white, 0, 255).astype(np.uint8)
-    wa[:, :, 3] = np.maximum(wa[:, :, 3], ring)
+    if STROKE:
+        for c in range(3):
+            wa[:, :, c] = np.clip(wa[:, :, c] * (1 - white) + 255 * white, 0, 255).astype(np.uint8)
+        wa[:, :, 3] = np.maximum(wa[:, :, 3], ring)
     ws.mark_dirty()
     dst_ctx.set_source_surface(ws, 0, 0)
     dst_ctx.paint()
@@ -178,7 +185,7 @@ def vertical(out):
     sticker(ctx, w, h, lambda c: clock_sticker(c, 840, 640, 105), outline=12)
     sticker(ctx, w, h, lambda c: draw_mom(c, 790, 1880, 2.95), outline=16)
     sticker(ctx, w, h, lambda c: draw_kid(c, 330, 2070, 3.55), outline=18)
-    surf.write_to_png(str(out / "thumb_short_1080x1920.png"))
+    surf.write_to_png(str(out / f"thumb_short_1080x1920{SUFFIX}.png"))
 
 
 def horizontal(out):
@@ -191,12 +198,14 @@ def horizontal(out):
     sticker(ctx, w, h, lambda c: clock_sticker(c, 640, 470, 95), outline=10)
     sticker(ctx, w, h, lambda c: draw_mom(c, 1050, 1000, 2.2), outline=12)
     sticker(ctx, w, h, lambda c: draw_kid(c, 250, 1150, 2.6), outline=14)
-    surf.write_to_png(str(out / "thumb_wide_1280x720.png"))
+    surf.write_to_png(str(out / f"thumb_wide_1280x720{SUFFIX}.png"))
 
 
 if __name__ == "__main__":
     out = Path(sys.argv[1])
     out.mkdir(parents=True, exist_ok=True)
+    if "--no-stroke" in sys.argv:
+        STROKE, SUFFIX = False, "_nostroke"
     vertical(out)
     horizontal(out)
     print("wrote", out)
