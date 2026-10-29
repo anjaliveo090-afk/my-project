@@ -166,6 +166,11 @@ def clock_sticker(ctx, x, y, r):
     ctx.restore()
 
 
+def block_avatar(ctx, x, y, s, expr="shock", wave=False):
+    """Classic blocky game avatar (yellow head/arms, blue shirt, green legs); no logos."""
+    hm.avatar(ctx, x, y, s, shirt="#2f6bd8", pants="#3fae4a", expr=expr, t=0.4, wave=wave)
+
+
 def offline_screen(ctx, x, y, s):
     hm.box(ctx, x - 150 * s, y - 100 * s, 300 * s, 200 * s, "#3a3f55", "#262a3a", r=16 * s, lw=6 * s)
     hm.box(ctx, x - 132 * s, y - 82 * s, 264 * s, 164 * s, "#101018", None, r=6 * s, lw=3 * s)
@@ -183,6 +188,7 @@ def vertical(out):
     big_text(ctx, "ROBLOX?!", 540, 410, size, "#ffe14a", tilt=-0.03)
     sticker(ctx, w, h, lambda c: offline_screen(c, 245, 680, 1.0), outline=10)
     sticker(ctx, w, h, lambda c: clock_sticker(c, 840, 640, 105), outline=12)
+    sticker(ctx, w, h, lambda c: block_avatar(c, 548, 1000, 2.2), outline=10)
     sticker(ctx, w, h, lambda c: draw_mom(c, 790, 1880, 2.95), outline=16)
     sticker(ctx, w, h, lambda c: draw_kid(c, 330, 2070, 3.55), outline=18)
     surf.write_to_png(str(out / f"thumb_short_1080x1920{SUFFIX}.png"))
@@ -195,7 +201,8 @@ def horizontal(out):
     burst(ctx, w, h, 640, 470)
     big_text(ctx, "MOM OWNS", 640, 110, 120, "#ffffff", tilt=-0.03)
     big_text(ctx, "ROBLOX?!", 640, 245, 150, "#ffe14a", tilt=-0.03)
-    sticker(ctx, w, h, lambda c: clock_sticker(c, 640, 470, 95), outline=10)
+    sticker(ctx, w, h, lambda c: clock_sticker(c, 715, 455, 90), outline=10)
+    sticker(ctx, w, h, lambda c: block_avatar(c, 528, 790, 1.6), outline=8)
     sticker(ctx, w, h, lambda c: draw_mom(c, 1050, 1000, 2.2), outline=12)
     sticker(ctx, w, h, lambda c: draw_kid(c, 250, 1150, 2.6), outline=14)
     surf.write_to_png(str(out / f"thumb_wide_1280x720{SUFFIX}.png"))
