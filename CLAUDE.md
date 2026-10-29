@@ -19,3 +19,5 @@ Sound defaults (animator): music `audio.music_ref()` mixed with `--music-volume 
 New reference videos: run `analysis/frame_log.py` (4 fps sheets with subtitles), `analysis/audio_ref.py` (SFX + music, needs the UVR model in `analysis/models/`, see `sound_design.md`) and `analysis/new_visuals.py`, then add what you learn to `visual_grammar.md` section 11 and `sound_design.md`.
 
 Limits to state honestly: Claude Code cannot generate the AI video; Flow's Omni does. Face consistency needs Ingredients images. Do not copy the reference channel's characters or SFX files, only the style.
+
+New style (different characters / look) in a new repo: follow `NEW_STYLE_GUIDE.md` and `MASTER_PROMPT_NEW_STYLE.md`.
