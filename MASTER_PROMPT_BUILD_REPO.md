@@ -39,14 +39,15 @@ progress.
 STEP 0 - BOOTSTRAP THE TOOLKIT (copy, don't rewrite)
 - git clone --depth 1 -b claude/dazzling-hypatia-7p55ue https://github.com/anjaliveo090-afk/my-project /tmp/kit
 - Copy into this repo:
-  - /tmp/kit/animator/engine.py and /tmp/kit/animator/audio.py → animator/
+  - /tmp/kit/animator/engine.py, audio.py, safezone.py, thumbnail.py → animator/
   - /tmp/kit/analysis/*.py → analysis/
   - /tmp/kit/assembler/ → assembler/
   - /tmp/kit/setup.sh, requirements.txt, .gitignore → repo root
 - Copy as worked examples, into reference_examples/: CLAUDE.md, MASTER_PROMPT.md,
   visual_grammar.md, sound_design.md, style_bible.md, style_medieval.md,
   animator/gambling.py, animator/arcade.py, animator/office.py, animator/style2.py,
-  animator/job_room.py, animator/spear_shield2.py, animator/style3.py, animator/medieval.py.
+  animator/job_room.py, animator/spear_shield2.py, animator/style3.py, animator/medieval.py,
+  animator/mom_owner.py, animator/home.py, animator/speedrun2.py, animator/speed.py, animator/speed2.py.
   Read them to learn the method: literal visual per phrase, keyframed camera landing on words,
   measured sound targets, contact-sheet checks.
 - Run `bash setup.sh` (installs packages, ffmpeg, and the voice/music separation model).
@@ -83,6 +84,14 @@ STEP 2 - BUILD THE STYLE IN CODE
 - Render a test sheet: each character × all expressions × main poses, next to my images.
   Compare and fix until proportions, line weight, colours and shading match. Show me the sheet.
 
+SAFE ZONE (the user's Shorts template, keep it unless I give a new one)
+- The WHOLE character and key props must sit inside x 38-680, y 149-1013 of 720x1280;
+  below y 678 only up to x 599 (like/comment buttons). Captions go under y 1013.
+- animator/safezone.py enforces it: call safezone.fit(SHOTS, sys.modules[__name__]) right before
+  render() in every story, add keep=[(x0, y0, x1, y1)] for key props, top=250 under a HUD.
+  Check a contact sheet with the zone drawn (safezone.overlay) before the full render.
+- For a looping Short call render(..., fade_in=0, fade_out=0) and end on the first scene.
+
 STEP 3 - SAMPLE VIDEO
 - Write animator/sample.py modelled on reference_examples/animator/gambling.py:
   - a 20-30 s made-up narration in the references' tone
@@ -111,6 +120,11 @@ STEP 4 - WRITE THE INSTRUCTIONS FOR FUTURE CHATS
   style's measured targets. No branch checkout line: everything will be on main.
 - README.md: what this repo is, plus the short message for a new chat:
   "I am attaching a voiceover and its SRT. Run bash setup.sh, then read MASTER_PROMPT.md and follow the prompt inside it exactly."
+
+STEP 4b - THUMBNAIL (when asked)
+- Adapt animator/thumbnail.py to the new style: one huge emotional face, a clear opponent,
+  2-3 word text, bright burst, 1080x1920 for Shorts and 1280x720 for search. Offer a no-stroke
+  variant (--no-stroke) if the style has no white outline.
 
 STEP 5 - PUBLISH
 - Commit and push your branch, then open a pull request into main and give me the link so I
