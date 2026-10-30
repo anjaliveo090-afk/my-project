@@ -17,7 +17,7 @@ SETUP
   style_bible.md, animator/README.md, assembler/README.md.
 - Style: office/Japan look (style2.Char2 + office.py + arcade.py).
   [For kings/medieval instead: read style_medieval.md, use style3.py + medieval.py, template spear_shield2.py.]
-- Template to copy: animator/speedrun.py (newest: on-screen timer HUD, labels kept below it via shot top=250, loopable ending) or animator/mom_owner.py / animator/gambling.py (newest: literal visual per phrase, ~31 shots,
+- Template to copy: animator/speedrun2.py (newest: every line in a real place, the avatar dressed like the kid, game UI like a boss bar / loot chest / comments, render(fade_in=0) for a seamless loop) or animator/speedrun.py ( on-screen timer HUD, labels kept below it via shot top=250, loopable ending) or animator/mom_owner.py / animator/gambling.py (newest: literal visual per phrase, ~31 shots,
   SFX list at ~1 per second). Also see job_room.py and clock_tower2.py.
   Do not change engine.py / style2.py / style3.py unless something is broken.
 

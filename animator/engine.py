@@ -972,7 +972,7 @@ def _dof(surf, focus, strength):
     surf.mark_dirty()
 
 
-def render(shots, total, out_path, xfade=0.22, grain=9, fade_out=0.6, frames=None):
+def render(shots, total, out_path, xfade=0.22, grain=9, fade_out=0.6, frames=None, fade_in=0.25):
     surf_a = cairo.ImageSurface(cairo.FORMAT_RGB24, W, H)
     surf_b = cairo.ImageSurface(cairo.FORMAT_RGB24, W, H)
     rs = np.random.default_rng(3)
@@ -999,8 +999,8 @@ def render(shots, total, out_path, xfade=0.22, grain=9, fade_out=0.6, frames=Non
         if T > total - fade_out:
             ctx.set_source_rgba(0, 0, 0, clamp((T - (total - fade_out)) / fade_out))
             ctx.paint()
-        if T < 0.25:
-            ctx.set_source_rgba(0, 0, 0, 1 - T / 0.25)
+        if T < fade_in:   # fade_in=0 for Shorts that loop (first frame must match the last)
+            ctx.set_source_rgba(0, 0, 0, 1 - T / fade_in)
             ctx.paint()
         surf_a.flush()
         a = np.ndarray((H, W, 4), np.uint8, surf_a.get_data())
